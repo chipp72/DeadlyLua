@@ -109,9 +109,7 @@ function Key(msg,code)
 			if IsMouseOnButton(xx+39*count/2,yy-20,20,100) then
 				move = (not move)
 				SaveGUIConfig(xx,yy)
-			end			
-		end
-		if msg == LBUTTON_UP then
+			end
 			for a = 1,count do
 				if IsMouseOnButton(xx+38*a,yy,32,32) then
 					spells[a].state = (not spells[a].state)
