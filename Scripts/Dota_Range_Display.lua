@@ -70,6 +70,9 @@ function Tick(tick)
 				if not spells[a].range then
 					spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
 				end
+				if spells[a].range < 100 then
+					spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
+				end
 				if not spells[a].range then return end
 				local dirty = false
 				if spells[a].state then
