@@ -66,7 +66,10 @@ function Tick(tick)
 	if #spells ~= 0 then		
 		for a,v in ipairs(spellList) do
 			if v.level ~= 0 and spells[a] then
-				spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
+				spells[a].range = v.castRange
+				if not spells[a].range then
+					spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
+				end
 				if not spells[a].range then return end
 				local dirty = false
 				if spells[a].state then
