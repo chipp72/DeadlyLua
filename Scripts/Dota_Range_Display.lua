@@ -1,4 +1,3 @@
-require("libs.drd")
 require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
@@ -26,7 +25,6 @@ function Tick(tick)
 	if not me then return end
 	
 	local ability = me.abilities
-	local num = rangelist[me.name]
 	local spellList = {}
 	for a,spell in ipairs(ability) do
 		if spell.name ~= "attribute_bonus" and not spell.hidden then
@@ -65,13 +63,11 @@ function Tick(tick)
 		end
 		text.visible = false
 	end
-	if #spells ~= 0 then
+	if #spells ~= 0 then		
 		for a,v in ipairs(spellList) do
 			if v.level ~= 0 and spells[a] then
-				spells[a].range = v.castRange
-				if rangelist[me.name] then
-					spells[a].range = num.ran[me:GetAbility(num.spell).level]
-				end
+				spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
+				if not spells[a].range then return end
 				local dirty = false
 				if spells[a].state then
 					if not spells[a].effect or spells[a].ranges ~= spells[a].range then
