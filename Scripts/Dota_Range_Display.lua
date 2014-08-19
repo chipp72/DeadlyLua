@@ -65,13 +65,13 @@ function Tick(tick)
 	end
 	if #spells ~= 0 then		
 		for a,v in ipairs(spellList) do
-			if v.level ~= 0 and spells[a] then		
+			if v.level ~= 0 and spells[a]  then		
 				spells[a].range = v.castRange
-				if not spells[a].range or spells[a].range < 100 then
+				if not spells[a].range and v.specialCount then
 					spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
-				end
-				if not spells[a].range or spells[a].range < 100  then
-					spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
+					if spells[a].range < 100  then
+						spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
+					end
 				end
 				if spells[a].range >= 1400 and v.name == "lone_druid_spirit_bear" then
 					spells[a].range = 1100
