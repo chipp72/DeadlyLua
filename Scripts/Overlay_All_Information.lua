@@ -275,16 +275,13 @@ function Tick(tick)
 							hero[v.handle].spell[a].textT.visible = false
 						end
 					end
-					if v.classId == CDOTA_Unit_Hero_DoomBringer and v.visible then				
+					if v.classId == CDOTA_Unit_Hero_DoomBringer and v.visible and hero[v.handle] and hero[v.handle].spell[4] and hero[v.handle].spell[5].bg.textureId then				
 						hero[v.handle].spell[4].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(4).name)
 						hero[v.handle].spell[5].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(5).name)
 					end
-					if v.classId == CDOTA_Unit_Hero_Rubick and v.visible then
+					if v.classId == CDOTA_Unit_Hero_Rubick and v.visible and hero[v.handle] and hero[v.handle].spell[5] and hero[v.handle].spell[5].bg.textureId then
 						hero[v.handle].spell[5].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(5).name)
 						hero[v.handle].spell[6].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(6).name)
-					end
-					if v.classId == CDOTA_Unit_Hero_Alchemist and v.visible then					
-						hero[v.handle].spell[2].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(2).name)				
 					end	
 				end
 				
