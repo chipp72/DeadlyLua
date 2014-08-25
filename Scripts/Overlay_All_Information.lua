@@ -9,7 +9,7 @@ config:SetParameter("topPanel", true)
 config:SetParameter("glypPanel", true)
 config:SetParameter("ShowRune", true)
 config:SetParameter("ShowCourier", true)
---config:SetParameter("ShowIfVisible", true)
+config:SetParameter("ShowIfVisible", true)
 config:Load()
 
 local manaBar = config.manaBar
@@ -117,6 +117,7 @@ txxB = 2.527
 txxG = 3.47
 end
 
+local rate = client.screenSize.x/testX
 --top panel coordinate
 local x_ = tpanelHeroSize*(client.screenSize.x/testX)
 local y_ = client.screenSize.y/tpanelHeroDown
@@ -152,9 +153,9 @@ function Tick(tick)
 	local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO})
 	local player = entityList:GetEntities({classId=CDOTA_PlayerResource})[1]
 	
-	--[[if ShowIfVisible then
+	if ShowIfVisible then
 		VisibleByEnemy(me,enemies)
-	end]]
+	end
 	
 	for i = 1, #enemies do
 		local v = enemies[i]
@@ -219,6 +220,9 @@ function Tick(tick)
 
 						if v.alive and v.visible and Spell ~= nil and Spell.name ~= "attribute_bonus" and not Spell.hidden then
 							hero[v.handle].spell[a].bg.visible = true
+							if (v.classId == CDOTA_Unit_Hero_DoomBringer or v.classId == CDOTA_Unit_Hero_Rubick) and a == 4 then
+								hero[v.handle].spell[a].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
+							end								
 							if Spell.state == 16 then
 								hero[v.handle].spell[a].nl.visible = true hero[v.handle].spell[a].nl.textureId = drawMgr:GetTextureId("NyanUI/other/spell_nolearn")
 								hero[v.handle].spell[a].textT.visible = false
@@ -275,14 +279,6 @@ function Tick(tick)
 							hero[v.handle].spell[a].textT.visible = false
 						end
 					end
-					if v.classId == CDOTA_Unit_Hero_DoomBringer and v.visible and hero[v.handle] and hero[v.handle].spell[4] and hero[v.handle].spell[5].bg.textureId then				
-						hero[v.handle].spell[4].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(4).name)
-						hero[v.handle].spell[5].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(5).name)
-					end
-					if v.classId == CDOTA_Unit_Hero_Rubick and v.visible and hero[v.handle] and hero[v.handle].spell[5] and hero[v.handle].spell[5].bg.textureId then
-						hero[v.handle].spell[5].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(5).name)
-						hero[v.handle].spell[6].bg.textureId =  drawMgr:GetTextureId("NyanUI/spellicons/"..v:GetAbility(6).name)
-					end	
 				end
 				
 				--Items
@@ -370,14 +366,14 @@ function Tick(tick)
 					panel[v.playerId].hpIN = drawMgr:CreateRect(0,y_,0,8,color) panel[v.playerId].hpIN.visible = false				
 					panel[v.playerId].hpB = drawMgr:CreateRect(0,y_,x_-1,8,0x000000ff,true) panel[v.playerId].hpB.visible = false
 					
-					panel[v.playerId].ulti = drawMgr:CreateRect(0,y_-9,14,14,0x0EC14A80) panel[v.playerId].ulti.visible = false		
+					panel[v.playerId].ulti = drawMgr:CreateRect(0,y_-9,14*rate,15,0x0EC14A80) panel[v.playerId].ulti.visible = false		
 					panel[v.playerId].ultiCDT = drawMgr:CreateText(0,y_-9,0xFFFFFF99,"",F13) panel[v.playerId].ultiCDT.visible = false	
-					--panel[v.playerId].lh = drawMgr:CreateText(xx-20+x_*v.playerId,y_-30,-1,"",F10)
+					panel[v.playerId].lh = drawMgr:CreateText(xx-20+x_*v.playerId,y_-30,-1,"",F10)
 				end			
 				
-				--local lasthits = player:GetLasthits(v.playerId)
-				--local denies = player:GetDenies(v.playerId)
-				--panel[v.playerId].lh.text = " "..lasthits.." / "..denies
+				local lasthits = player:GetLasthits(v.playerId)
+				local denies = player:GetDenies(v.playerId)
+				panel[v.playerId].lh.text = " "..lasthits.." / "..denies
 				
 				for d = 4,8 do
 					local ult = v:GetAbility(d)
@@ -428,9 +424,9 @@ end
 function Rune()
 	local runes = entityList:GetEntities({classId=CDOTA_Item_Rune})
 	if #runes == 0 then
-			if minimapRune.visible == true then
+		if minimapRune.visible then
 			minimapRune.visible = false				
-			end
+		end
 		return
 	end	
 	local rune = runes[1]
@@ -481,7 +477,7 @@ function Courier(me)
 	end  
 end
 
---[[function VisibleByEnemy(me,ent)
+function VisibleByEnemy(me,ent)
 
 	local effectDeleted = false
 	for _,v in ipairs(ent) do 
@@ -511,7 +507,7 @@ end
 		collectgarbage("collect")
 	end
 
-end]]
+end
 
 function GetXX(ent)
 	local team = ent.team
