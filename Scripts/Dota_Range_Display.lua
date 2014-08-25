@@ -63,7 +63,8 @@ function Tick(tick)
 		end
 		text.visible = false
 	end
-	if #spells ~= 0 then		
+	if #spells ~= 0 then
+		local dirty = false
 		for a,v in ipairs(spellList) do
 			if v.level ~= 0 and spells[a]  then		
 				spells[a].range = v.castRange
@@ -73,11 +74,7 @@ function Tick(tick)
 						spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
 					end
 				end
-				if spells[a].range >= 1400 and v.name == "lone_druid_spirit_bear" then
-					spells[a].range = 1100
-				end
-				if not spells[a].range then return end
-				local dirty = false
+				if not spells[a].range then return end				
 				if spells[a].state then
 					if not spells[a].effect or spells[a].ranges ~= spells[a].range then
 						spells[a].effect = Effect(me,"range_display")
@@ -88,13 +85,14 @@ function Tick(tick)
 				elseif spells[a].effect then
 					spells[a].effect = nil
 					dirty = true
-				end
-				if dirty then
-					collectgarbage("collect")
-				end
+				end				
 			end
 		end
+		if dirty then
+			collectgarbage("collect")
+		end
 	end
+	
 end
 
 function Key(msg,code)
