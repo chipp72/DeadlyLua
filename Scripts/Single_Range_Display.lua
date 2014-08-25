@@ -1,15 +1,15 @@
 require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
-config:SetParameter("Hotkey", "B", config.TYPE_HOTKEY)
+config:SetParameter("Hotkey", "O", config.TYPE_HOTKEY)
 config:SetParameter("Range", 1200)
 config:Load()
 
-range = config:GetParameter("Range")
-key = config.Hotkey
+local range = config:GetParameter("Range")
+local key = config.Hotkey
 
-activated = false
-effect = nil
+local activated = false
+local effect = nil
 
 function Key(msg,code)
 	-- check if ingame and not chatting
@@ -38,6 +38,7 @@ end
 function RemoveEffect()
 	effect = nil
 	collectgarbage("collect")
+	activated = false
 end
  
 script:RegisterEvent(EVENT_CLOSE,RemoveEffect) -- remove effect on game close
