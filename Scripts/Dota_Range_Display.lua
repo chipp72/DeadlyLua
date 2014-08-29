@@ -25,10 +25,11 @@ function Tick(tick)
 	if not me then return end
 	
 	local ability = me.abilities
-	local spellList = {}
-	for a,spell in ipairs(ability) do
-		if spell.name ~= "attribute_bonus" and not spell.hidden then
-			table.insert(spellList,spell)
+	if spellList[1] == nil then
+		for a,spell in ipairs(ability) do
+			if spell.name ~= "attribute_bonus" and not spell.hidden then
+				table.insert(spellList,spell)
+			end
 		end
 	end
 	global = #spellList
@@ -66,9 +67,9 @@ function Tick(tick)
 	if #spells ~= 0 then
 		local dirty = false
 		for a,v in ipairs(spellList) do
-			if v.level ~= 0 and spells[a] then
+			if v.level ~= 0 then
 				spells[a].range = v.castRange
-				if (spells[a].range == nil or spells[a].range == 0) and v.specialCount then
+				if (not spells[a].range or spells[a].range == 0) and v.specialCount > 0 then
 					spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
 					if spells[a].range < 100  then
 						spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
