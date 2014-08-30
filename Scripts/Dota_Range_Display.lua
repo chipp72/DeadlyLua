@@ -23,7 +23,7 @@ function Tick(tick)
 	local me = entityList:GetMyHero()
 
 	if not me then return end
-	
+
 	local ability = me.abilities
 	if spellList[1] == nil then
 		for a,spell in ipairs(ability) do
@@ -75,7 +75,7 @@ function Tick(tick)
 						spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
 					end
 				end
-				if not spells[a].range then return end				
+				if not spells[a].range or type(spells[a].range) ~= "number" then return end
 				if spells[a].state then
 					if not spells[a].effect or spells[a].ranges ~= spells[a].range then
 						spells[a].effect = Effect(me,"range_display")
