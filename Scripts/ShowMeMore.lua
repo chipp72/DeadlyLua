@@ -1,4 +1,4 @@
---show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed and supports stolen spell usage by rubick.
+--show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed, techies mines and supports stolen spell usage by rubick.
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
@@ -13,6 +13,9 @@ local speeed = 600
 local speed = {600,650,700,750}
 --pudge and wr
 local RC = {} local ss = {}
+--teches
+local MS = {} local MR = {}
+local MinesInfo = {{"npc_dota_techies_land_mine",500},{"npc_dota_techies_stasis_trap",200},{"npc_dota_techies_remote_mine",425}}
 --all
 local stage = 1	
 --drawMgr
@@ -61,7 +64,7 @@ function Main(tick)
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
 	local team = me.team
-	
+	--print(me:GetAbility(1).specials)	
 	for i,v in ipairs(hero) do
 		if v.team ~= team then
 			local id = v.classId
@@ -76,6 +79,7 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_PhantomLancer then PhantomL(team,v.visible) end
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
+			if id == CDOTA_Unit_Hero_Techies then Mines(team,v.abilities) end
 		end
 	end
 	
@@ -373,6 +377,40 @@ function Tinker(team,status,cast)
 		TKicon.visible = false
 	end	
 end
+
+function Mines(team,ent)
+	local mins = entityList:GetEntities({classId=369})
+	local clear = false
+	for i,v in ipairs(mins) do
+		if v.team ~= team then
+			if v.alive then
+				if not MS[v.handle] then
+					MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+					MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+					local minesR = nil
+					for _,l in ipairs(MinesInfo) do
+						if v.name == l[1] then
+							minesR = l[2]
+							break
+						end
+					end
+					if minesR then
+						MR[v.handle] = Effect(v.position,"range_display")
+						MR[v.handle]:SetVector(1, Vector(minesR,0,0))
+						MR[v.handle]:SetVector(0, v.position)
+					end
+				end
+			elseif 	MS[v.handle] then
+				MR[v.handle] = nil
+				MS[v.handle] = nil
+				clear = true
+			end
+		end
+	end
+	if clear then
+		collectgarbage("collect")
+	end
+end		
 
 function Roha()	
 	local rosh = entityList:FindEntities({classId=CDOTA_Unit_Roshan})[1]
