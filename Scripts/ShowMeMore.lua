@@ -15,7 +15,7 @@ local speed = {600,650,700,750}
 local RC = {} local ss = {}
 --teches
 local MS = {} local MR = {}
-local MinesInfo = {{"npc_dota_techies_land_mine",500},{"npc_dota_techies_stasis_trap",200},{"npc_dota_techies_remote_mine",425}}
+local MinesInfo = {{"npc_dota_techies_land_mine",150},{"npc_dota_techies_stasis_trap",200},{"npc_dota_techies_remote_mine",425}}
 --all
 local stage = 1	
 --drawMgr
@@ -409,7 +409,7 @@ function Mines(team)
 	if SleepCheck("mines") then
 		MR = {} MS = {}
 		collectgarbage("collect")
-		Sleep(30000,"mines")
+		Sleep(60000,"mines")
 	elseif clear then
 		collectgarbage("collect")
 	end
