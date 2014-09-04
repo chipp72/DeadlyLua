@@ -1,4 +1,4 @@
---show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed, techies mines and supports stolen spell usage by rubick.
+--show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed and supports stolen spell usage by rubick.
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
@@ -64,7 +64,6 @@ function Main(tick)
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
 	local team = me.team
-	--print(me:GetAbility(1).specials)	
 	for i,v in ipairs(hero) do
 		if v.team ~= team then
 			local id = v.classId
@@ -79,7 +78,7 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_PhantomLancer then PhantomL(team,v.visible) end
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
-			if id == CDOTA_Unit_Hero_Techies then Mines(team,v.abilities) end
+			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
 		end
 	end
 	
@@ -378,7 +377,7 @@ function Tinker(team,status,cast)
 	end	
 end
 
-function Mines(team,ent)
+function Mines(team)
 	local mins = entityList:GetEntities({classId=369})
 	local clear = false
 	for i,v in ipairs(mins) do
@@ -536,7 +535,7 @@ function GameClose()
 		stage = 1
 	end	
 	effects = {} TArrow = {} TBoat = {}
-	speeed = 600 RC = {} ss = {}	
+	speeed = 600 RC = {} ss = {} MS = {} MR = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
