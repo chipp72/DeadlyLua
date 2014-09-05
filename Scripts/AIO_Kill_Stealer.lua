@@ -30,7 +30,7 @@ else
 end
 
 --Stuff
-local hero = {} local note = {} local reg = false local combo = false
+local hero = {} local heroG = {} local note = {} local reg = false local combo = false
 local activ = true local draw = true local myhero = nil
 
 --Draw function
@@ -161,6 +161,8 @@ function Tick(tick)
 		Kill(true,true,me,2,{3.5,4,4.5,5},nil,nil,1,ID)	
 	elseif ID == CDOTA_Unit_Hero_Techies then
 		Kill(false,false,me,3,{600,800,1100,1500},nil,300,1,nil,DAMAGE_COMP)
+		KillGlobal(me,6,{300,450,600},{450,600,750},2,true,ID)
+		--Mines(me)
 	elseif ID == CDOTA_Unit_Hero_Tusk then
 		local tkdmg = (me.dmgMin + me.dmgBonus)*3.5
 		Kill(true,false,me,4,{tkdmg, tkdmg, tkdmg, tkdmg},nil,300,5,ID,DAMAGE_PHYS)
@@ -255,7 +257,7 @@ function Kill(comp,lsblock,me,ability,damage,adamage,range,target,id,tdamage)
 	end
 end
 
-function KillGlobal(me,ability,damage,adamage,target)
+function KillGlobal(me,ability,damage,adamage,target,comp,id)
 	local Spell = me:GetAbility(ability)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	local count = {}
@@ -266,14 +268,15 @@ function KillGlobal(me,ability,damage,adamage,target)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do				
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				if not heroG[v.handle] then
+					heroG[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) heroG[v.handle].visible = false heroG[v.handle].entity = v heroG[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 1 then
-					hero[v.handle].visible = Drawning(draw,me)
-					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))						
+					heroG[v.handle].visible = Drawning(draw,me)
+					local DmgM = ComplexGetDmg(comp,Spell.level,me,v,Dmg,id)
+					local DmgS = math.floor(v:DamageTaken(DmgM,DmgT,me))						
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF	
+					heroG[v.handle].text = " "..DmgF	
 					if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
 						if not note[v.handle] then
 							note[v.handle] = true
@@ -287,6 +290,9 @@ function KillGlobal(me,ability,damage,adamage,target)
 								if target == 1 then
 									KSCastSpell(Spell,v,me,true)
 									combo = false break
+								elseif target == 2 then
+									KSCastSpell(me:GetAbility(4),v.position,me,false)
+									combo = false break								
 								elseif target == 3 then
 									KSCastSpell(Spell,nil,me,nil)
 									me:SafeCastAbility(Spell)
@@ -297,8 +303,8 @@ function KillGlobal(me,ability,damage,adamage,target)
 					elseif note[v.handle] then
 						note[v.handle] = false
 					end						
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif heroG[v.handle].visible then
+					heroG[v.handle].visible = false
 				end
 			end
 		end
@@ -306,6 +312,8 @@ function KillGlobal(me,ability,damage,adamage,target)
 	if #count > 1 then
 		if target == 1 then
 			KSCastSpell(Spell,count[1],me,true)
+		elseif target == 2 then
+			KSCastSpell(me:GetAbility(4),count[1].position,me,nil)
 		elseif target == 3 then
 			KSCastSpell(Spell,nil,me,nil)						
 		end
@@ -477,6 +485,10 @@ function ComplexGetDmg(complex,lvl,me,ent,damage,id)
 				baseDmg = baseDmg + ((hp[static]) * ent.health)
 			end
 			return baseDmg			
+		elseif id == CDOTA_Unit_Hero_Techies then
+			local range = me:GetAbility(6):GetSpecialData("radius")
+			local mines = entityList:GetEntities(function (v) return v.classId == CDOTA_NPC_TechiesMines and v.alive and v.GetDistance2D(v,ent) < range end)
+			return baseDmg * #mines
 		end
 	end
 end
@@ -703,7 +715,7 @@ function SFtarget(ent,me)
 end
 
 function Drawning(draw,me)
-	if me.classId ~= CDOTA_Unit_Hero_Zuus then
+	if me.classId ~= CDOTA_Unit_Hero_Zuus and me.classId ~= CDOTA_Unit_Hero_Techies then
 		return draw
 	end
 	return false
@@ -713,7 +725,7 @@ function GameClose()
 	rect.visible = false
 	icon.visible = false
 	dmgCalc.visible = false
-	hero = {}
+	hero = {} heroG = {}
 	myhero = nil
 	combo = false
 	collectgarbage("collect")
