@@ -63,10 +63,6 @@ function Main(tick)
 
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
-	local proj = entityList:GetProjectiles({})
-	for i,v in ipairs(proj) do
-		print(v.name)
-	end
 	local team = me.team
 	for i,v in ipairs(hero) do
 		if v.team ~= team then
