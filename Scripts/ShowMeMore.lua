@@ -63,6 +63,10 @@ function Main(tick)
 
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
+	local proj = entityList:GetProjectiles({})
+	for i,v in ipairs(proj) do
+		print(v.name)
+	end
 	local team = me.team
 	for i,v in ipairs(hero) do
 		if v.team ~= team then
@@ -122,6 +126,9 @@ function WhatARubick(hero,team,status,spell,cast)
 			Boat(cast,team)
 		elseif name == "ancient_apparition_ice_blast" then
 			Ancient(cast,team,hero,mename)
+		elseif name == "techies_land_mines" or name == "techies_stasis_trap" or name == "techies_remote_mines" then
+			Rmines = true
+			Mines(team)
 		elseif Rcharge and TCharge1.visible then
 			TCharge1.visible = false TCharge2.visible = false Rcharge = false
 		elseif Rarrow and icon.visible then
@@ -132,6 +139,9 @@ function WhatARubick(hero,team,status,spell,cast)
 			TInfest.visible = false Rinfest = false
 		elseif Rassist and TAssis.visible then
 			TAssis.visible = false Rassist = false
+		elseif Rmines then
+			MS = {}
+			collectgarbage("collect")
 		end
 	end
 end
