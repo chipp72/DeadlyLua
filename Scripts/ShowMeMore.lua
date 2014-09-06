@@ -8,14 +8,15 @@ local effects = {}
 local TArrow = {}
 --boat
 local TBoat = {}
+local tabl = {}
 --charge
 local speeed = 600
 local speed = {600,650,700,750}
 --pudge and wr
 local RC = {} local ss = {}
 --teches
-local MS = {} local MR = {} local TS = {}
-local MinesInfo = {}
+local MS = {} local TS = {}
+local MinesInfo = {} local minesminimap = true
 MinesInfo["npc_dota_techies_land_mine"] = 150
 MinesInfo["npc_dota_techies_stasis_trap"] = 200
 MinesInfo["npc_dota_techies_remote_mine"] = 425
@@ -392,28 +393,35 @@ function Mines(team)
 		local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
 		local clear = false
 		for i,v in ipairs(mins) do
-			if v.team ~= team then			
-				if v.alive then	
-					if not MS[v.handle] then
-						MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-						MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)					
-						MR[v.handle] = Effect(v.position,"range_display")
-						MR[v.handle]:SetVector(1, Vector(MinesInfo[v.name],0,0))
-						MR[v.handle]:SetVector(0, v.position)
+			if v.team ~= team then
+				if not MS[v.handle] and v.alive then
+					MS[v.handle] = {}
+					MS[v.handle].map = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+					MS[v.handle].map.entity = v MS[v.handle].map.entityPosition = Vector(0,0,v.healthbarOffset)
+					MS[v.handle].eff = Effect(v.position,"range_display")
+					MS[v.handle].eff:SetVector(1, Vector(MinesInfo[v.name],0,0))
+					MS[v.handle].eff:SetVector(0, v.position)
+					if minesminimap then
+						local minimap = MapToMinimap(v.position.x,v.position.y)
+						MS[v.handle].minmap = drawMgr:CreateRect(minimap.x-10,minimap.y-10,18,18,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
 					end
-					MS[v.handle].visible = not v.visible
-				elseif 	MS[v.handle] then
-					MR[v.handle] = nil
-					MS[v.handle] = nil
+					table.insert(tabl,v.handle)
+				elseif MS[v.handle] then
+					MS[v.handle].map.visible = not v.visible
+				end
+			end
+		end		
+		for i,v in ipairs(tabl) do
+			if MS[v] then
+				local st = entityList:GetEntity(v)
+				if not st or not st.alive then
+					MS[v] = nil
+					table.remove(tabl, i)
 					clear = true
 				end
 			end
-		end	
-		if SleepCheck("mines") then
-			MR = {} MS = {}
-			collectgarbage("collect")
-			Sleep(60000,"mines")
-		elseif clear then
+		end
+		if clear then
 			collectgarbage("collect")
 		end
 		Sleep(250,"min")
@@ -560,7 +568,7 @@ function GameClose()
 		stage = 1
 	end	
 	effects = {} TArrow = {} TBoat = {} TS = {}
-	speeed = 600 RC = {} ss = {} MS = {} MR = {}
+	speeed = 600 RC = {} ss = {} MR = {} tabl = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
