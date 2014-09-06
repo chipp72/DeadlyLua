@@ -415,7 +415,7 @@ function Mines(team)
 	if SleepCheck("mines") then
 		MR = {} MS = {}
 		collectgarbage("collect")
-		Sleep(60000,"mines")
+		Sleep(10000,"mines")
 	elseif clear then
 		collectgarbage("collect")
 	end
