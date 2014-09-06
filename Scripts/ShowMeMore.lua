@@ -14,8 +14,11 @@ local speed = {600,650,700,750}
 --pudge and wr
 local RC = {} local ss = {}
 --teches
-local MS = {} local MR = {}
-local MinesInfo = {{"npc_dota_techies_land_mine",150},{"npc_dota_techies_stasis_trap",200},{"npc_dota_techies_remote_mine",425}}
+local MS = {} local MR = {} local TS = {}
+local MinesInfo = {}
+MinesInfo["npc_dota_techies_land_mine"] = 150
+MinesInfo["npc_dota_techies_stasis_trap"] = 200
+MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
 local stage = 1	
 --drawMgr
@@ -79,6 +82,7 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
+			if id == CDOTA_Unit_Hero_TemplarAssassin then Trap(team) end
 		end
 	end
 	
@@ -384,40 +388,51 @@ function Tinker(team,status,cast)
 end
 
 function Mines(team)
-	local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
-	local clear = false
-	for i,v in ipairs(mins) do
-		if v.team ~= team then			
-			if v.alive then	
-				if not MS[v.handle] then
-					MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-					MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
-					local minesR = nil
-					for _,l in ipairs(MinesInfo) do
-						if v.name == l[1] then
-							minesR = l[2]
-							break
-						end
-					end
-					if minesR then
+	if SleepCheck("min") then
+		local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
+		local clear = false
+		for i,v in ipairs(mins) do
+			if v.team ~= team then			
+				if v.alive then	
+					if not MS[v.handle] then
+						MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+						MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)					
 						MR[v.handle] = Effect(v.position,"range_display")
-						MR[v.handle]:SetVector(1, Vector(minesR,0,0))
+						MR[v.handle]:SetVector(1, Vector(MinesInfo[v.name],0,0))
 						MR[v.handle]:SetVector(0, v.position)
 					end
+					MS[v.handle].visible = not v.visible
+				elseif 	MS[v.handle] then
+					MR[v.handle] = nil
+					MS[v.handle] = nil
+					clear = true
 				end
-			elseif 	MS[v.handle] then
-				MR[v.handle] = nil
-				MS[v.handle] = nil
-				clear = true
+			end
+		end	
+		if SleepCheck("mines") then
+			MR = {} MS = {}
+			collectgarbage("collect")
+			Sleep(60000,"mines")
+		elseif clear then
+			collectgarbage("collect")
+		end
+		Sleep(250,"min")
+	end
+end		
+
+function Trap(team)
+	if SleepCheck("trap") then
+		local mins = entityList:GetEntities({classId=288})
+		for i,v in ipairs(mins) do
+			if v.team ~= team then
+				if not TS[v.handle] then
+					TS[v.handle] = drawMgr:CreateRect(0,0,30,30,0x000000FF,drawMgr:GetTextureId("NyanUI/other/trap"))
+					TS[v.handle].entity = v TS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				end
+				TS[v.handle].visible = not v.visible
 			end
 		end
-	end	
-	if SleepCheck("mines") then
-		MR = {} MS = {}
-		collectgarbage("collect")
-		Sleep(10000,"mines")
-	elseif clear then
-		collectgarbage("collect")
+		Sleep(500,"trap")
 	end
 end		
 
@@ -544,7 +559,7 @@ function GameClose()
 		script:UnregisterEvent(Roha)
 		stage = 1
 	end	
-	effects = {} TArrow = {} TBoat = {}
+	effects = {} TArrow = {} TBoat = {} TS = {}
 	speeed = 600 RC = {} ss = {} MS = {} MR = {}
 	icon.visible = false
 	PKIcon.visible = false
