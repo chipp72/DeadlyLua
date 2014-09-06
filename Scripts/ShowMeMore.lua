@@ -82,7 +82,7 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
-			if id == CDOTA_Unit_Hero_TemplarAssassin then Trap(team) end
+			--if id == CDOTA_Unit_Hero_TemplarAssassin then Trap(team) end
 		end
 	end
 	
