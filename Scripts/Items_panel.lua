@@ -13,8 +13,10 @@ local yy = 300
 local clear = true
 local move = false
 local sleeptick = 0
-local F12 = drawMgr:CreateFont("F11","Arial",12,500)
-local F10 = drawMgr:CreateFont("F11","Arial",10,500)
+local con = 1920/1600
+if con < 1 then	con = 1 end
+local F12 = drawMgr:CreateFont("F11","Arial",12*con,500)
+local F10 = drawMgr:CreateFont("F11","Arial",10*con,500)
 
 function Tick(tick)
 
@@ -42,7 +44,7 @@ function Tick(tick)
 			v = enemies[i]
 
 			if not hero[i] then hero[i] = {}
-				hero[i].he = drawMgr:CreateRect(xx+1, yy+26*i,18,18,0x000000D0)
+				hero[i].he = drawMgr:CreateRect(xx+1*con, yy+26*i*con,18,18,0x000000D0)
 			end
 
 			hero[i].he.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))	
@@ -52,11 +54,11 @@ function Tick(tick)
 				if not hero[i].item then hero[i].item = {} end				
 
 				if not hero[i].item[c] then hero[i].item[c] = {}		
-					hero[i].item[c].bg = drawMgr:CreateRect(xx+26*c, yy+26*i,32,18,0x000000D0) hero[i].item[c].bg.visible = true
-					hero[i].item[c].ko = drawMgr:CreateRect(xx-1+26*c, yy-1+26*i,24,20,0xFFFFFF40,true) hero[i].item[c].ko.visible = true
-					hero[i].item[c].txt = drawMgr:CreateText(xx+6+26*c,yy+4+26*i,0xFFFFFFff,"",F12) hero[i].item[c].txt.visible = false
-					hero[i].item[c].rcr = drawMgr:CreateRect(xx+26*c, yy+26*i,22,18,0x00000030) hero[i].item[c].rcr.visible = false
-					hero[i].item[c].charg = drawMgr:CreateText(xx+18+26*c,yy+9+26*i,0xFFFFFFff,"",F10) hero[i].item[c].charg.visible = false
+					hero[i].item[c].bg = drawMgr:CreateRect(xx+26*c*con, yy+26*i*con,32*con,18*con,0x000000D0) hero[i].item[c].bg.visible = true
+					hero[i].item[c].ko = drawMgr:CreateRect(xx-1+26*c*con, yy-1+26*i*con,24*con,20*con,0xFFFFFF40,true) hero[i].item[c].ko.visible = true
+					hero[i].item[c].txt = drawMgr:CreateText(xx+6+26*c*con,yy+4+26*i*con,0xFFFFFFff,"",F12) hero[i].item[c].txt.visible = false
+					hero[i].item[c].rcr = drawMgr:CreateRect(xx+26*c*con, yy+26*i*con,22*con,18*con,0x00000030) hero[i].item[c].rcr.visible = false
+					hero[i].item[c].charg = drawMgr:CreateText(xx+18+26*c*con,yy+9+26*i*con,0xFFFFFFff,"",F10) hero[i].item[c].charg.visible = false
 				end	
 				local Items = v:GetItem(c)
 				if Items then
@@ -85,7 +87,7 @@ function Tick(tick)
 							hero[i].item[c].txt.visible = false
 						end
 					end					
-				else
+				else 
 					hero[i].item[c].bg.textureId = drawMgr:GetTextureId("NyanUI/items/emptyitembg")
 					hero[i].item[c].charg.visible = false
 					hero[i].item[c].txt.visible = false
@@ -111,7 +113,7 @@ function Key(msg,code)
 		end
 
 		if activated then
-			if IsMouseOnButton(xx+1, yy+26*1,20,20) then
+			if IsMouseOnButton(xx+1, yy+26*1*con,20,20) then
 				if msg == LBUTTON_UP then              
 					move = not move
 				end
@@ -154,6 +156,6 @@ function GameClose()
 end
 
 
-script:RegisterEvent(EVENT_CLOSE,GameClose)				
+script:RegisterEvent(EVENT_CLOSE, GameClose)				
 script:RegisterEvent(EVENT_TICK,Tick)
 script:RegisterEvent(EVENT_KEY,Key)
