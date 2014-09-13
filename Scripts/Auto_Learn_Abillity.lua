@@ -55,9 +55,9 @@ function Tick(tick)
 		
 	if not table1[1] then
 		local ability = me.abilities
-		for a,spells in ipairs(ability) do			
-			if not spells.hidden and not spells:IsBehaviourType(LuaEntityAbility.BEHAVIOR_NOT_LEARNABLE) and spells.abilityData.maxLevel > 1 then				
-				table.insert(table1, spells)
+		for a,spell in ipairs(ability) do			
+			if not spell.hidden and not spell:IsBehaviourType(LuaEntityAbility.BEHAVIOR_NOT_LEARNABLE) and spell.abilityData.maxLevel > 1 and spell.name ~= "nevermore_shadowraze3" and spell.name ~= "nevermore_shadowraze2"  then				
+				table.insert(table1, spell)
 			end			
 		end
 	else
