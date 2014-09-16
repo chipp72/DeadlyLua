@@ -50,8 +50,8 @@ function Combo(tick)
 		Track()		
 				
 		if start then
-		
-			if entityList:GetMyPlayer().selection[1].handle ~= me.handle then
+			local sel = entityList:GetMyPlayer().selection[1]
+			if sel and sel.handle ~= me.handle then
 				start = nil
 				statusText.text = "Status: Off"
 				return
