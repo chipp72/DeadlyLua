@@ -22,6 +22,7 @@ MinesInfo["npc_dota_techies_stasis_trap"] = 200
 MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
 local stage = 1	
+local reg = false
 --drawMgr
 local icon = drawMgr:CreateRect(0,0,18,18,0x000000ff) icon.visible = false
 local PKIcon = drawMgr:CreateRect(0,0,18,18,0x000000ff) PKIcon.visible = false
@@ -36,7 +37,7 @@ spells = {
 {"modifier_invoker_sun_strike", "invoker_sun_strike_team","invoker_sun_strike_ring_b",175},
 {"modifier_lina_light_strike_array", "lina_spell_light_strike_array_ring_collapse","lina_spell_light_strike_array_sphere",225},
 {"modifier_kunkka_torrent_thinker", "kunkka_spell_torrent_pool","kunkka_spell_torrent_bubbles_b",225},
---{"modifier_leshrac_split_earth_thinker", "leshrac_split_earth_b","leshrac_split_earth_c","radius","leshrac_split_earth"}
+{"modifier_leshrac_split_earth_thinker", "leshrac_split_earth_b","leshrac_split_earth_c",225}
 }
 
 RangeCastList = {
@@ -462,6 +463,7 @@ function Roha()
 	elseif rosh and rosh.alive and stage == 5 then
 		stage = 1
 		RoshanSideMessage("Respawn","00:00")	
+		reg = false
 		script:UnregisterEvent(Roha)
 	end
 end
@@ -558,17 +560,19 @@ end
 
 function Roshan( kill )
     if kill.name == "dota_roshan_kill" then		
-		script:RegisterEvent(EVENT_TICK,Roha)		
+		script:RegisterEvent(EVENT_TICK,Roha)
+		reg = true
     end
 end
 
 function GameClose()	
-	if stage ~= 1 then
+	if reg then
 		script:UnregisterEvent(Roha)
 		stage = 1
+		reg = false
 	end	
 	effects = {} TArrow = {} TBoat = {} TS = {}
-	speeed = 600 RC = {} ss = {} MR = {} tabl = {}
+	speeed = 600 RC = {} ss = {} MS = {} MR = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
@@ -578,6 +582,7 @@ function GameClose()
 	TCharge2.visible = false
 	collectgarbage("collect")
 end
+
 
 script:RegisterEvent(EVENT_TICK,Main)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
