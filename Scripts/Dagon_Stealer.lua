@@ -20,7 +20,7 @@ function Tick(tick)
  
 	if not client.connected or client.loading or client.console or tick < sleep then return end
 	
-	sleep = tick + 150
+	sleep = tick + 200
 
 	local me = entityList:GetMyHero() 
 	
@@ -32,19 +32,17 @@ function Tick(tick)
 	rect.visible = visible
 	icon.visible = visible
 	
-	if visible then
+	if visible and dagon:CanBeCasted() and me:CanUseItems()  then
 		local lvl = string.match (dagon.name, "%d+")
 		if not lvl then lvl = 1 end local dmgD = dmg[lvl*1]
 		local enemy = entityList:GetEntities({type=LuaEntity.TYPE_HERO,alive=true,visible=true,team = (5-me.team)})
 		if not me:IsChanneling() and Nyx(me) then
 			for i = 1,#enemy do
 				local v = enemy[i]
-				if not v:IsIllusion() then
-					if v.health > 0 and GetDistance2D(v,me) < dagon.castRange and v:CanDie() then
-						if not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") then
-							if v.health < v:DamageTaken(dmgD, DAMAGE_MAGC, me) then
-								me:SafeCastAbility(dagon,v)
-							end
+				if not v:IsIllusion() and v.health > 0 and GetDistance2D(v,me) < dagon.castRange and v:CanDie() then
+					if not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") and not v:IsLinkensProtected() then
+						if v.health < v:DamageTaken(dmgD, DAMAGE_MAGC, me) then
+							me:CastAbility(dagon,v)
 						end
 					end
 				end
@@ -69,11 +67,9 @@ function Draw(one,two)
 end
 
 function Key()
-
 	if not client.chat and IsKeyDown(key) then
 		activated = not activated
 	end
-
 end
 
 function GameClose()
