@@ -1,4 +1,4 @@
---show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed, mines, traps and supports stolen spell usage by rubick.
+--show sun strike, light strike, torrent, split earth, arrow, charge, infest, assassinate, hook, powershoot, Kunkka's ghost ship, ice blast, cold feed and supports stolen spell usage by rubick.
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
@@ -8,18 +8,13 @@ local effects = {}
 local TArrow = {}
 --boat
 local TBoat = {}
-local tabl = {}
 --charge
 local speeed = 600
 local speed = {600,650,700,750}
 --pudge and wr
 local RC = {} local ss = {}
 --teches
-local MS = {} local TS = {}
-local MinesInfo = {} local minesminimap = true
-MinesInfo["npc_dota_techies_land_mine"] = 150
-MinesInfo["npc_dota_techies_stasis_trap"] = 200
-MinesInfo["npc_dota_techies_remote_mine"] = 425
+local MS = {} local MR = {} local TS = {}
 --all
 local stage = 1	
 local reg = false
@@ -80,7 +75,6 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_Rubick then WhatARubick(hero,team,v.visible,v:GetAbility(5),cast) end			
 			if id == CDOTA_Unit_Hero_AncientApparition then Ancient(cast,team,hero,"ancient_apparition") end
 			if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKa(v) end
-			if id == CDOTA_Unit_Hero_PhantomLancer then PhantomL(team,v.visible) end
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
@@ -358,18 +352,6 @@ function PhantomKa(v)
 	end
 end
 
-function PhantomL(team,status)
-	local illlus = entityList:FindEntities(function (v) return v.type==LuaEntity.TYPE_HERO and v.illusion and v.team ~= team and v.classId == CDOTA_Unit_Hero_PhantomLancer  and v.unitState == -1031241196 end)[1]
-	if not status and illlus then
-		if not effPL then
-			effPL = Effect(illlus,"phantomlancer_SpiritLance_target_slowparent")				
-		end
-	elseif effPL then
-		effPL = nil
-		collectgarbage("collect")
-	end 
-end
-
 function Tinker(team,status,cast) 
 	local march = FindMarch(cast,team)
 	if march then			
@@ -394,37 +376,19 @@ function Mines(team)
 		local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
 		local clear = false
 		for i,v in ipairs(mins) do
-			if v.team ~= team then
-				if not MS[v.handle] and v.alive then
-					MS[v.handle] = {}
-					MS[v.handle].map = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-					MS[v.handle].map.entity = v MS[v.handle].map.entityPosition = Vector(0,0,v.healthbarOffset)
-					MS[v.handle].eff = Effect(v.position,"range_display")
-					MS[v.handle].eff:SetVector(1, Vector(MinesInfo[v.name],0,0))
-					MS[v.handle].eff:SetVector(0, v.position)
-					if minesminimap then
-						local minimap = MapToMinimap(v.position.x,v.position.y)
-						MS[v.handle].minmap = drawMgr:CreateRect(minimap.x-10,minimap.y-10,18,18,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+			if v.team ~= team then			
+				if v.alive then	
+					if not MS[v.handle] then
+						MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+						MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)	
 					end
-					table.insert(tabl,v.handle)
-				elseif MS[v.handle] then
-					MS[v.handle].map.visible = not v.visible
+					MS[v.handle].visible = not v.visible
+				elseif 	MS[v.handle] then
+					MS[v.handle].visible = false
+					MS[v.handle] = nil
 				end
 			end
-		end		
-		for i,v in ipairs(tabl) do
-			if MS[v] then
-				local st = entityList:GetEntity(v)
-				if not st or not st.alive then
-					MS[v] = nil
-					table.remove(tabl, i)
-					clear = true
-				end
-			end
-		end
-		if clear then
-			collectgarbage("collect")
-		end
+		end	
 		Sleep(250,"min")
 	end
 end		
@@ -462,6 +426,7 @@ function Roha()
 		stage = 5
 	elseif rosh and rosh.alive and stage == 5 then
 		stage = 1
+		RoshanSideMessage("Respawn","00:00")	
 		RoshanSideMessage("Respawn","00:00")	
 		reg = false
 		script:UnregisterEvent(Roha)
@@ -582,7 +547,6 @@ function GameClose()
 	TCharge2.visible = false
 	collectgarbage("collect")
 end
-
 
 script:RegisterEvent(EVENT_TICK,Main)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
