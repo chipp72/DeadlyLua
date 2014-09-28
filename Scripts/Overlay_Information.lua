@@ -424,8 +424,7 @@ end
 
 function Rune()
 	local runes = entityList:GetEntities({classId=CDOTA_Item_Rune})
-	if #runes == last then return end last = #runes 
-		
+	if #runes == last and math.floor(client.gameTime % 120) ~= 0 then return end last = #runes 
 	rune[-2272].visible,rune[3008].visible = false,false
 	for i,v in ipairs(runes) do
 		local runeType = v.runeType
@@ -448,9 +447,8 @@ function Rune()
 		rune[pos].visible = true
 		rune[pos].x = runeMinimap.x-20/2
 		rune[pos].y = runeMinimap.y-20/2
-		rune[pos].textureId = drawMgr:GetTextureId("NyanUI/minirunes/"..filename)
-	end
-	
+		rune[pos].textureId = drawMgr:GetTextureId("NyanUI/minirunes/translucent/"..filename.."_t75")
+	end	
 end
 
 function Courier(me)		
