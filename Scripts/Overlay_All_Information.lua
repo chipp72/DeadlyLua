@@ -26,12 +26,13 @@ local F11 = drawMgr:CreateFont("F11","Arial",11,500)
 local F12 = drawMgr:CreateFont("F12","Arial",12,500)
 local F13 = drawMgr:CreateFont("F13","Arial",13,500)
 local F14 = drawMgr:CreateFont("F14","Arial",14,500)
-local item = {} local hero = {} local spell = {} local panel = {} local mana = {} local cours = {}local eff = {} local mod = {} local rune = {} local run = {}
+local item = {} local hero = {} local spell = {} local panel = {} local mana = {} local cours = {}local eff = {} local mod = {} local rune = {} 
 
 rune[-2272] = drawMgr:CreateRect(0,0,20,20,0x000000ff) rune[-2272].visible = false
 rune[3008] = drawMgr:CreateRect(0,0,20,20,0x000000ff) rune[3008].visible = false
 
 local sleeptick = 0
+local last = 0
 
 print(math.floor(client.screenRatio*100))
 
@@ -423,35 +424,31 @@ end
 
 function Rune()
 	local runes = entityList:GetEntities({classId=CDOTA_Item_Rune})
-	if not aa then ru = #runes aa = true elseif aa then ru1 = #runes aa = false end	
-	
-	if ru ~= ru1 then		
-		rune[-2272].visible,rune[3008].visible = false,false
-		for i,v in ipairs(runes) do
-			local runeType = v.runeType
-			local filename = ""
-			local pos = v.position.x
-			if runeType == 0 then
-					filename = "doubledamage"
-			elseif runeType == 1 then
-					filename = "haste"
-			elseif runeType == 2 then
-					filename = "illusion"
-			elseif runeType == 3 then
-					filename = "invis"
-			elseif runeType == 4 then
-					filename = "regen"
-			elseif runeType == 5 then
-					filename = "bounty"
-			end
-			if rune[pos].visible == false then
-				local runeMinimap = MapToMinimap(v)
-				rune[pos].visible = true
-				rune[pos].x = runeMinimap.x-20/2
-				rune[pos].y = runeMinimap.y-20/2
-				rune[pos].textureId = drawMgr:GetTextureId("NyanUI/minirunes/"..filename)
-			end	
+	if #runes == last then return end last = #runes 
+		
+	rune[-2272].visible,rune[3008].visible = false,false
+	for i,v in ipairs(runes) do
+		local runeType = v.runeType
+		local filename = ""
+		local pos = v.position.x
+		if runeType == 0 then
+				filename = "doubledamage"
+		elseif runeType == 1 then
+				filename = "haste"
+		elseif runeType == 2 then
+				filename = "illusion"
+		elseif runeType == 3 then
+				filename = "invis"
+		elseif runeType == 4 then
+				filename = "regen"
+		elseif runeType == 5 then
+				filename = "bounty"
 		end
+		local runeMinimap = MapToMinimap(v)
+		rune[pos].visible = true
+		rune[pos].x = runeMinimap.x-20/2
+		rune[pos].y = runeMinimap.y-20/2
+		rune[pos].textureId = drawMgr:GetTextureId("NyanUI/minirunes/"..filename)
 	end
 	
 end
@@ -539,7 +536,8 @@ function GameClose()
 	hero = {}
 	panel = {}
 	cours = {}
-	--minimapRune.visible = false	
+	last = 0
+	rune[-2272].visible,rune[3008].visible = false,false	
 	glyph.visible = false
 	collectgarbage("collect")
 end
