@@ -17,7 +17,7 @@ spots = {
 --dire
 {-3459,4928,-2688,3968,1}, -- easy
 {-5056, 4352,-3712, 3264}, -- hard pull
-{3904,-1536,4928,-2560,1}, -- ancient
+{3744,-288,4576,-1120}, -- ancient
 {-1921,3138,-964,2308}, -- camp by rune
 {-832,4098,-3,3203,1}, -- medium camp
 {447,3778,1659,2822,1} -- hard camp by mid
@@ -25,11 +25,28 @@ spots = {
 }
 
 local toggleKey = config.Hotkey
+
 local check = false
+
 local eff = {}
-local eff1 = {} local eff2 = {}
-local eff3 = {} local eff4 = {}
+local eff1 = {}
+local eff2 = {}
+local eff3 = {}
+local eff4 = {}
+
 local effec = "candle_flame_medium" -- ambient_gizmo_model
+
+--[[
+
+	a----b
+	|	 |
+	|	 |
+	d----c
+	
+	a 2240;-4288
+	c 3776;-5312
+
+]]
 
 function Key(msg,code)
 
@@ -111,8 +128,10 @@ end
 
 function GameClose()
 	eff = {}
-	eff1 = {} eff2 = {}
-	eff3 = {} eff4 = {}
+	eff1 = {}
+	eff2 = {}
+	eff3 = {}
+	eff4 = {}
 	collectgarbage("collect")
 end
 
