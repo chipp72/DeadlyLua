@@ -533,7 +533,7 @@ function ComplexGetDmg(lvl,me,ent,damage,id)
 			return (math.floor(me.intellectTotal) - math.floor(ent.intellectTotal))*damage
 		end
 		return 0
-	elseif id == CDOTA_Unit_Hero_Tusk then
+	--[[elseif id == CDOTA_Unit_Hero_Tusk then
 		local des = me:FindItem("item_desolator")
 		if des and not ent:DoesHaveModifier("modifier_desolator_buff") then
 			local armor = ent.totalArmor - 7
@@ -546,9 +546,9 @@ function ComplexGetDmg(lvl,me,ent,damage,id)
 			end
 		else 
 			return damage
-		end
+		end]]
 	elseif id == CDOTA_Unit_Hero_Elder_Titan then
-		local pasDmg = {1.08,1.16,1.25,1.33}
+		local pasDmg = {1.12,1.19,1.25,1.25}
 		local pas = me:GetAbility(3).level
 		if pas ~= 0 then
 			if not ent:FindModifier("modifier_elder_titan_natural_order") then
@@ -583,8 +583,7 @@ function ComplexGetDmg(lvl,me,ent,damage,id)
 		end
 		return baseDmg			
 	elseif id == CDOTA_Unit_Hero_Techies then
-		local range = me:GetAbility(6):GetSpecialData("radius")
-		local mines = entityList:GetEntities(function (v) return v.classId == CDOTA_NPC_TechiesMines and v.alive and v.GetDistance2D(v,ent) < range end)
+		local mines = entityList:GetEntities(function (v) return v.classId == CDOTA_NPC_TechiesMines and v.alive and v.GetDistance2D(v,ent) < 425 end)
 		return baseDmg * #mines
 	end
 end
