@@ -1,3 +1,4 @@
+--<<summarizes all available damage (eb,dagon,spells)>>
 --Подключение библиотеки
 require("libs.Utils")
 
