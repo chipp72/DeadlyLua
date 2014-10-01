@@ -1,4 +1,4 @@
---lash hit market
+--<<If the icon has become a color that mean that creep dies from your attack>>
 require("libs.ScriptConfig")
 require("libs.Utils")
 
