@@ -1,3 +1,5 @@
+--<<Show timings of stunnes, hexes, silences with different colors>>
+
 require("libs.Utils")
 
 local mod = {}
@@ -11,13 +13,12 @@ local SilenceList = {"modifier_skywrath_mage_ancient_seal","modifier_earth_spiri
 
 function Tick(tick)
 
-	if not (IsIngame() or SleepCheck()) then return end
-	
+	if not SleepCheck() then return end
 	local me  = entityList:GetMyHero()
 	
 	if not me then return end
 
-	local enemy = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false, team = me:GetEnemyTeam()})
+	local enemy = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false, team = 5-me.team})
 	
 	for i,v in ipairs(enemy) do
 
@@ -26,7 +27,7 @@ function Tick(tick)
 	
 		if not mod[v.handle] then
 			mod[v.handle] = drawMgr:CreateText(xx,yy,stuncolor,"",drawMgr:CreateFont("F13","Arial",20,500)) mod[v.handle].visible = false mod[v.handle].entity = v mod[v.handle].entityPosition = Vector(0,0,offset)			
-		end
+		end		
 		
 		if v.alive and v.visible and v.health > 0 then
 			if v:IsStunned() then
@@ -89,4 +90,10 @@ function FindHexOrSilenceModifier(v,tab)
 	return false
 end
 
+function GameClose()
+	mod = {}
+	collectgarbage("collect")
+end
+ 
+script:RegisterEvent(EVENT_CLOSE, GameClose)
 script:RegisterEvent(EVENT_TICK,Tick)
