@@ -3,6 +3,14 @@
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
+require("libs.ScriptConfig")
+local config = ScriptConfig.new()
+config:SetParameter("ExtraMinesInfo", true)
+config:Load()
+
+local ExtraMinesInfo = config.ExtraMinesInfo
+
+
 --sunstrike, torrent, and other
 local effects = {}
 --arrow
@@ -15,7 +23,11 @@ local speed = {600,650,700,750}
 --pudge and wr
 local RC = {} local ss = {}
 --teches
-local MS = {} local MR = {} local TS = {}
+local MS = {} local TS = {} local MinesInfo = {}
+local tabl = {}
+MinesInfo["npc_dota_techies_land_mine"] = 150
+MinesInfo["npc_dota_techies_stasis_trap"] = 450
+MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
 local stage = 1	
 local reg = false
@@ -375,21 +387,55 @@ end
 function Mines(team)
 	if SleepCheck("min") then
 		local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
-		local clear = false
-		for i,v in ipairs(mins) do
-			if v.team ~= team then			
-				if v.alive then	
-					if not MS[v.handle] then
-						MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-						MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)	
+		if not ExtraMinesInfo then
+			for i,v in ipairs(mins) do
+				if v.team ~= team then			
+					if v.alive then	
+						if not MS[v.handle] then
+							MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+							MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)	
+						end
+						MS[v.handle].visible = not v.visible
+					elseif 	MS[v.handle] then
+						MS[v.handle].visible = false
+						MS[v.handle] = nil
 					end
-					MS[v.handle].visible = not v.visible
-				elseif 	MS[v.handle] then
-					MS[v.handle].visible = false
-					MS[v.handle] = nil
 				end
 			end
-		end	
+		else
+			local clear = false
+			for i,v in ipairs(mins) do
+				if v.team ~= team then
+					if not MS[v.handle] and v.alive then
+						MS[v.handle] = {}
+						MS[v.handle].map = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+						MS[v.handle].map.entity = v MS[v.handle].map.entityPosition = Vector(0,0,v.healthbarOffset)
+						MS[v.handle].eff = Effect(v.position,"range_display")
+						MS[v.handle].eff:SetVector(1, Vector(MinesInfo[v.name],0,0))
+						MS[v.handle].eff:SetVector(0, v.position)						
+						local minimap = MapToMinimap(v.position.x,v.position.y)
+						MS[v.handle].minmap = drawMgr:CreateRect(minimap.x-10,minimap.y-10,18,18,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+						table.insert(tabl,v.handle)
+					elseif MS[v.handle] and not v.alive then
+						clear = true
+						MS[v.handle] = nil
+					end
+				end
+			end
+			for i,v in ipairs(tabl) do
+				if MS[v] then
+					local st = entityList:GetEntity(v)
+					if not st or not st.alive then
+						MS[v] = nil
+						table.remove(tabl, i)
+						clear = true
+					end
+				end
+			end			
+			if clear then
+				collectgarbage("collect")
+			end
+		end		
 		Sleep(250,"min")
 	end
 end		
@@ -537,8 +583,8 @@ function GameClose()
 		stage = 1
 		reg = false
 	end	
-	effects = {} TArrow = {} TBoat = {} TS = {}
-	speeed = 600 RC = {} ss = {} MS = {} MR = {}
+	effects = {} TArrow = {} TBoat = {} TS = {} 
+	speeed = 600 RC = {} ss = {} MS = {} tabl = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
