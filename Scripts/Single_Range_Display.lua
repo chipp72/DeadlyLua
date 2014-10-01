@@ -1,3 +1,4 @@
+--<<shows blink dager range>>
 require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
