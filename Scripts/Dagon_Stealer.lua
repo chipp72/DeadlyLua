@@ -1,3 +1,4 @@
+--<<Automatically kill enemy>>
 require("libs.Utils")
 require("libs.ScriptConfig")
 
