@@ -1,3 +1,4 @@
+--<<Ultimates will automatically be stolen when the enemy casts them if you are in range.>>
 require("libs.Utils")
 
 local hero = {} local ls = {} local ult = {} local icon = {}
