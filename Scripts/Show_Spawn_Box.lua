@@ -1,3 +1,4 @@
+--<<Show nearest spawn boxes blocking areas>>
 require("libs.Utils")
 require("libs.ScriptConfig")
 
@@ -17,7 +18,7 @@ spots = {
 --dire
 {-3459,4928,-2688,3968,1}, -- easy
 {-5056, 4352,-3712, 3264}, -- hard pull
-{3744,-288,4576,-1120}, -- ancient
+{3283,-97,4728,-1220}, -- ancient
 {-1921,3138,-964,2308}, -- camp by rune
 {-832,4098,-3,3203,1}, -- medium camp
 {447,3778,1659,2822,1} -- hard camp by mid
