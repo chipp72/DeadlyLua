@@ -1,3 +1,5 @@
+--<<Shows ability range>>
+
 require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
