@@ -1,3 +1,4 @@
+--<< Display a lot of information about all heroes, glyph cooldown, courer, rune and visibe by enemy status>>
 require("libs.Res")
 require("libs.ScriptConfig")
 
