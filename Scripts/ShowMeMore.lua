@@ -1,3 +1,4 @@
+--<<Show a lot of hidden spells>>
 require("libs.Utils")
 require("libs.ScriptConfig")
 
