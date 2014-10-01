@@ -1,3 +1,4 @@
+--<<Displays the enemies inventory>>
 require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
