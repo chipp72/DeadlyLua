@@ -1,3 +1,5 @@
+--<<Automatically kill enemy as soon as their health drops low enough>>
+
 -- a lot of improve. (performance,calculation,prediction)
 require("libs.ScriptConfig")
 require("libs.Utils")
