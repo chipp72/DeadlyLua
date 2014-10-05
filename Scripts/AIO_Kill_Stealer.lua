@@ -224,14 +224,15 @@ function Kill(lsblock,me,ability,damage,adamage,range,target)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
-					hero[v.handle].visible = draw
+					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF
+					hero[hand].text = " "..DmgF
 					if activ and not me:IsChanneling() then
 						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
 							if target == 1 then
@@ -243,8 +244,8 @@ function Kill(lsblock,me,ability,damage,adamage,range,target)
 							end
 						end
 					end
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif hero[hand].visible then
+					hero[hand].visible = false
 				end
 			end
 		end
@@ -262,14 +263,15 @@ function SmartKill(lsblock,me,ability,damage,adamage,range,target,id)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
-					hero[v.handle].visible = draw
+					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF
+					hero[hand].text = " "..DmgF
 					if activ and not me:IsChanneling() then
 						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
 							if target == 1 then
@@ -281,8 +283,8 @@ function SmartKill(lsblock,me,ability,damage,adamage,range,target,id)
 							end
 						end
 					end
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif hero[hand].visible then
+					hero[hand].visible = false
 				end
 			end
 		end
@@ -301,15 +303,16 @@ function ComplexKill(lsblock,me,ability,damage,adamage,range,target,id)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
-					hero[v.handle].visible = draw
+					hero[hand].visible = draw
 					local DmgM = ComplexGetDmg(Level,me,v,Dmg,id)
 					local DmgS = math.floor(v:DamageTaken(DmgM,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF
+					hero[hand].text = " "..DmgF
 					if activ and not me:IsChanneling() then
 						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
 							if target == 1 then
@@ -321,8 +324,8 @@ function ComplexKill(lsblock,me,ability,damage,adamage,range,target,id)
 							end
 						end
 					end
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif hero[hand].visible then
+					hero[hand].visible = false
 				end
 			end
 		end
@@ -340,17 +343,18 @@ function KillGlobal(me,ability,damage,adamage,target,comp,id)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do				
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not heroG[v.handle] then
-					heroG[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) heroG[v.handle].visible = false heroG[v.handle].entity = v heroG[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not heroG[hand] then
+					heroG[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) heroG[hand].visible = false heroG[hand].entity = v heroG[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 1 then
-					heroG[v.handle].visible = Drawning(draw,me)
+					heroG[hand].visible = Drawning(draw,me)
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))						
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
-					heroG[v.handle].text = " "..DmgF	
+					heroG[hand].text = " "..DmgF	
 					if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
-						if not note[v.handle] then
-							note[v.handle] = true
+						if not note[hand] then
+							note[hand] = true
 							GenerateSideMessage(v.name,Spell.name)
 						end
 						if activ and not me:IsChanneling() then
@@ -371,11 +375,11 @@ function KillGlobal(me,ability,damage,adamage,target,comp,id)
 								end
 							end
 						end
-					elseif note[v.handle] then
-						note[v.handle] = false
+					elseif note[hand] then
+						note[hand] = false
 					end						
-				elseif heroG[v.handle].visible then
-					heroG[v.handle].visible = false
+				elseif heroG[hand].visible then
+					heroG[hand].visible = false
 				end
 			end
 		end
@@ -402,14 +406,15 @@ function KillPrediction(me,ability,damage,cast,project)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 1 then
-					hero[v.handle].visible = draw
+					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF
+					hero[hand].text = " "..DmgF
 					if activ and not me:IsChanneling() then
 						if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
 							local move = v.movespeed local pos = v.position	local distance = GetDistance2D(v,me)
@@ -424,8 +429,8 @@ function KillPrediction(me,ability,damage,cast,project)
 							end
 						end
 					end
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif hero[hand].visible then
+					hero[hand].visible = false
 				end
 			end
 		end
@@ -441,13 +446,14 @@ function KillAxe(me,damage,adamage)
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
-				if not hero[v.handle] then
-					hero[v.handle] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
-					hero[v.handle].visible = draw
+					hero[hand].visible = draw
 					local DmgF = math.floor(v.health - Dmg + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
-					hero[v.handle].text = " "..DmgF
+					hero[hand].text = " "..DmgF
 					if activ and not me:IsChanneling() then
 						if me:IsMagicDmgImmune() or (NotDieFromSpell(Spell,v,me) and not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") and NotDieFromBM(v,me,Dmg)) then
 							if DmgF < 0 and GetDistance2D(me,v) < 400 then	
@@ -455,8 +461,8 @@ function KillAxe(me,damage,adamage)
 							end
 						end
 					end
-				elseif hero[v.handle].visible then
-					hero[v.handle].visible = false
+				elseif hero[hand].visible then
+					hero[hand].visible = false
 				end
 			end
 		end
@@ -677,7 +683,7 @@ end
 
 function KillStealer(hero)
 	local hId = hero.classId
-	if hId == CDOTA_Unit_Hero_AncientApparition or hId ==  CDOTA_Unit_Hero_Tinker or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_FacelessVoid or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Oracle or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_Riki or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_PhantomAssassin or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren then 
+	if hId == CDOTA_Unit_Hero_AncientApparition or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_FacelessVoid or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Oracle or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_Riki or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_PhantomAssassin or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren then 
 		return true
 	end
 	return false
