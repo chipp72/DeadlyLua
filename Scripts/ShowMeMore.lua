@@ -69,7 +69,6 @@ function Main(tick)
 	if not client.connected or client.loading or client.console or not SleepCheck() then return end
 
 	local me = entityList:GetMyHero() if not me then return end
-	if entityList:GetMouseover() then print(entityList:GetMouseover().classId) end
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
 	local projet = entityList:GetProjectiles({})
@@ -172,7 +171,6 @@ end
 function Project(proj,tick)
 	if SleepCheck("pr") then
 		for i, v in ipairs(proj) do
-			print(v.name)
 			if v.source == nil then
 				local name = v.name
 				if string.sub(name, -11) == "base_attack" then
@@ -619,7 +617,7 @@ function GameClose()
 	end	
 	effects = {} TArrow = {} TBoat = {} TS = {} 
 	speeed = 600 RC = {} ss = {} MS = {} tabl = {}
-	img = {} sleeep = {} heroes = {} tinkertick = 0
+	img = {} sleeep = {} heroes = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
