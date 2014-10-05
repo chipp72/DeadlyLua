@@ -89,6 +89,11 @@ ResTable = {
 		minimap    = {px = 12, py = 14, h = 288, w = 304},
 		}
 	},
+	{2560,1600,{
+		rune       = {x = 0 , y = 0},
+		minimap    = {px = 27, py = 28, h = 356, w = 391},
+		}
+	},
 }
 
 function MapToMinimap(x, y)
