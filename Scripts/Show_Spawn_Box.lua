@@ -18,7 +18,7 @@ spots = {
 --dire
 {-3459,4928,-2688,3968,1}, -- easy
 {-5056, 4352,-3712, 3264}, -- hard pull
-{3283,-97,4728,-1220}, -- ancient
+{3350,-169,4731,-1161}, -- ancient
 {-1921,3138,-964,2308}, -- camp by rune
 {-832,4098,-3,3203,1}, -- medium camp
 {447,3778,1659,2822,1} -- hard camp by mid
@@ -65,7 +65,7 @@ function Key(msg,code)
 		
 		local vec = Vector(me.position.x,me.position.y,me.position.z)
 		
-		if (GetDistance2D(Vector(k[1],k[2],0),vec) < 1500 or GetDistance2D(Vector(k[3],k[4],0),vec) < 1500) and not eff[i] and check then
+		if (GetDistance2D(Vector(k[1],k[2],0),vec) < 2000 or GetDistance2D(Vector(k[3],k[4],0),vec) < 2000) and not eff[i] and check then
 			
 			local coint1 = math.floor(math.floor(k[3]-k[1])/50)
 			local coint2 = math.floor(math.floor(k[2]-k[4])/50)
