@@ -3,13 +3,8 @@
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
-require("libs.ScriptConfig")
-local config = ScriptConfig.new()
-config:SetParameter("ExtraMinesInfo", true)
-config:Load()
 
-local ExtraMinesInfo = config.ExtraMinesInfo
-
+local ExtraMinesInfo = false
 
 --sunstrike, torrent, and other
 local effects = {}
@@ -29,6 +24,7 @@ MinesInfo["npc_dota_techies_land_mine"] = 150
 MinesInfo["npc_dota_techies_stasis_trap"] = 450
 MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
+local img = {} local sleeep = {} local heroes = {}
 local stage = 1	
 local reg = false
 --drawMgr
@@ -73,9 +69,10 @@ function Main(tick)
 	if not client.connected or client.loading or client.console or not SleepCheck() then return end
 
 	local me = entityList:GetMyHero() if not me then return end
-
+	if entityList:GetMouseover() then print(entityList:GetMouseover().classId) end
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
+	local projet = entityList:GetProjectiles({})
 	local team = me.team
 	for i,v in ipairs(hero) do
 		if v.team ~= team then
@@ -91,11 +88,12 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
-			if id == CDOTA_Unit_Hero_TemplarAssassin then Trap(team) end
+			if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then Trap(team) end
 		end
 	end
 	
-	DirectBase(cast,team)	
+	DirectBase(cast,team)
+	Project(projet,tick)
 	
 	Sleep(125)
 
@@ -169,6 +167,38 @@ function DirectBase(cast,team)
 			end
 		end
 	end
+end
+
+function Project(proj,tick)
+	if SleepCheck("pr") then
+		for i, v in ipairs(proj) do
+			if v.source == nil then
+				local name = v.name
+				if string.sub(name, -11) == "base_attack" then
+					local hero = name:gsub("_base_attack","")
+					if not img[hero] then
+						img[hero] = drawMgr:CreateRect(0,0,18,18,0x000000ff) img[hero].visible = false					
+						table.insert(heroes,hero)
+					elseif img[hero].visible == false then	
+						local minmap = MapToMinimap(v.position.x,v.position.y)
+						img[hero].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..hero)
+						img[hero].x = minmap.x-10
+						img[hero].y = minmap.y-10
+						img[hero].visible = true
+						sleeep[hero] = tick
+					end
+				end
+			end
+		end	
+		for i,v in ipairs(heroes) do
+			if img[v].visible == true then
+				if tick >= sleeep[v] + 1500 then
+					img[v].visible = false
+				end
+			end
+		end
+		Sleep(225,"pr")
+	end	
 end
 
 function RangeCast(v)
@@ -442,7 +472,7 @@ end
 
 function Trap(team)
 	if SleepCheck("trap") then
-		local mins = entityList:GetEntities({classId=288})
+		local mins = entityList:GetEntities({classId=293})
 		for i,v in ipairs(mins) do
 			if v.team ~= team then
 				if not TS[v.handle] then
@@ -499,7 +529,7 @@ function FindAB(first, second, distance)
 	return retVector
 end
 
-function RCVector(ent, dis)
+function RCVector(ent,dis)
 	local reVector = Vector()
 	reVector = Vector(ent.position.x + dis * math.cos(ent.rotR), ent.position.y + dis * math.sin(ent.rotR), 0)
 	client:GetGroundPosition(reVector)
@@ -527,7 +557,6 @@ end
 
 function FindBlast(cast,team)
 	for i, v in ipairs(cast) do
-		print(v.dayVision,v.unitState)
 		if v.team ~= team and v.dayVision == 550 and (v.unitState == 29376896 or v.unitState == 29376768) then
 			return v
 		end
@@ -546,7 +575,7 @@ end
 
 function FindCharge(cast)
 	for i, v in ipairs(cast) do
-		if v.dayVision == 0 and v.unitState == 59802112 then
+		if v.dayVision == 0 and v.unitState == 29901056 then
 			return v
 		end
 	end
@@ -555,7 +584,7 @@ end
 
 function FindBoat(cast,team)
 	for i,v in ipairs(cast) do
-		if v.team ~= team and v.dayVision == 400 and v.unitState == 59802112 then
+		if v.team ~= team and v.dayVision == 400 and v.unitState == 29901056 then
 			return v
 		end
 	end
