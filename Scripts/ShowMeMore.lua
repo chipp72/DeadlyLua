@@ -25,7 +25,7 @@ MinesInfo["npc_dota_techies_stasis_trap"] = 450
 MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
 local img = {} local sleeep = {} local heroes = {}
-local stage = 1	
+local stage = 1	local tinkertick = 0
 local reg = false
 --drawMgr
 local icon = drawMgr:CreateRect(0,0,18,18,0x000000ff) icon.visible = false
@@ -85,7 +85,7 @@ function Main(tick)
 			if id == CDOTA_Unit_Hero_Rubick then WhatARubick(hero,team,v.visible,v:GetAbility(5),cast) end			
 			if id == CDOTA_Unit_Hero_AncientApparition then Ancient(cast,team,hero,"ancient_apparition") end
 			if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKa(v) end
-			if id == CDOTA_Unit_Hero_Tinker then Tinker(team,v.visible,cast) end
+			if id == CDOTA_Unit_Hero_Rattletrap  then Tinker(team,v.visible,cast,tick) end
 			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
 			if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then Trap(team) end
@@ -172,6 +172,7 @@ end
 function Project(proj,tick)
 	if SleepCheck("pr") then
 		for i, v in ipairs(proj) do
+			print(v.name)
 			if v.source == nil then
 				local name = v.name
 				if string.sub(name, -11) == "base_attack" then
@@ -395,23 +396,26 @@ function PhantomKa(v)
 	end
 end
 
-function Tinker(team,status,cast) 
-	local march = FindMarch(cast,team)
-	if march then			
-		TKicon.visible = not status
-		if not TKMinimap then
-			TKpos = march.position
-			TKMinimap = MapToMinimap(march.position.x,march.position.y)
-			TKicon.x = TKMinimap.x-10
-			TKicon.y = TKMinimap.y-10
-			TKicon.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/tinker")
-		elseif TKpos ~= march.position then
+function Tinker(team,status,cast,tick) 
+	if SleepCheck("tinker") then
+		local march = FindMarch(cast,team)
+		if march and tinkertick == 0 then			
+			TKicon.visible = not status
+			if not TKMinimap then
+				TKpos = march.position
+				TKMinimap = MapToMinimap(march.position.x,march.position.y)
+				TKicon.x = TKMinimap.x-10
+				TKicon.y = TKMinimap.y-10
+				TKicon.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/rattletrap")
+				tinkertick = tick + 2000
+			end
+		elseif tinkertick < tick and TKMinimap then
 			TKMinimap = nil
-		end
-	elseif TKMinimap then
-		TKMinimap = nil
-		TKicon.visible = false
-	end	
+			tinkertick = 0
+			TKicon.visible = false
+			Sleep(14000,"tinker")
+		end			
+	end
 end
 
 function Mines(team)
@@ -566,7 +570,7 @@ end
 
 function FindMarch(cast,team)
 	for i, v in ipairs(cast) do
-		if v.dayVision == 0 and v.unitState == 0 and v.team ~= team then
+		if v.team ~= team and v.dayVision == 600 and v.unitState == 29376768 then
 			return v
 		end
 	end
@@ -615,6 +619,7 @@ function GameClose()
 	end	
 	effects = {} TArrow = {} TBoat = {} TS = {} 
 	speeed = 600 RC = {} ss = {} MS = {} tabl = {}
+	img = {} sleeep = {} heroes = {} tinkertick = 0
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
