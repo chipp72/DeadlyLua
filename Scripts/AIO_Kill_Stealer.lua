@@ -137,7 +137,11 @@ function Tick(tick)
 	elseif ID == CDOTA_Unit_Hero_VengefulSpirit then
 		Kill(true,me,1,{100, 175, 250, 325},nil,nil,1)
 	elseif ID == CDOTA_Unit_Hero_Lina then
-		Kill(true,me,4,{450,675,950},nil,nil,1)
+		if not me:AghanimState() then
+			Kill(true,me,4,{450,675,950},nil,nil,1)
+		else
+			KillLina(true,me,4,{450,675,950},nil,nil,1)
+		end
 	elseif ID == CDOTA_Unit_Hero_Alchemist then
 		SmartKill(false,me,2,{24,35,46,57},nil,800,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Morphling then
@@ -532,6 +536,45 @@ function KillMines(me,ability,damage,adamage,target,comp,id)
 		end
 	end
 	
+end
+
+function KillLina(lsblock,me,ability,damage,adamage,range,target)
+	local Spell = me:GetAbility(ability)
+	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
+	if Spell.level > 0 then
+		local Dmg = GetDmg(Spell.level,me,damage,adamage)
+		local DmgT = DAMAGE_PURE
+		local Range = GetRange(Spell,range)
+		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
+		for i,v in ipairs(enemies) do
+			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+				end
+				if v.visible and v.alive and v.health > 0 then
+					hero[hand].visible = draw
+					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me,true))
+					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
+					hero[hand].text = " "..DmgF
+					if activ and not me:IsChanneling() then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
+							if target == 1 then
+								KSCastSpell(Spell,v,me,lsblock)	break
+							elseif target == 2 then
+								KSCastSpell(Spell,v.position,me,lsblock) break
+							elseif target == 3 then
+								KSCastSpell(Spell,nil,me,nil) break
+							end
+						end
+					end
+				elseif hero[hand].visible then
+					hero[hand].visible = false
+				end
+			end
+		end
+	end
 end
 
 function GetDmg(lvl,me,tab1,tab2)
