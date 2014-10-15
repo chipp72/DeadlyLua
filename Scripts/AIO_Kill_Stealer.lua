@@ -85,7 +85,7 @@ function Tick(tick)
 	elseif ID == CDOTA_Unit_Hero_CrystalMaiden then		
 		Kill(false,me,1,{100, 150, 200, 250},nil,700,2)
 	elseif ID == CDOTA_Unit_Hero_DeathProphet then		
-		Kill(false,me,1,{100, 175, 250, 300},nil,nil,1)
+		Kill(false,me,1,{75, 150, 225, 300},nil,nil,1)
 	elseif ID == CDOTA_Unit_Hero_DragonKnight then
 		Kill(false,me,1,{90, 170, 240, 300},nil,nil,1)
 	elseif ID == CDOTA_Unit_Hero_EarthSpirit then
