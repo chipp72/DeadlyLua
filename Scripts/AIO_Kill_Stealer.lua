@@ -152,6 +152,8 @@ function Tick(tick)
 		SmartKill(true,me,2,{20,20,20,20},nil,nil,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Undying then
 		SmartKill(true,me,2,{5,10,15,20},nil,nil,1,ID)
+	elseif ID == CDOTA_Unit_Hero_Riki then
+		RikiKill(true,me,4,{50,70,90},nil,4)
 	--complex spells
 	--Kill(linkin block,me,ability,damage,scepter damage,range,target,classId,damage type)
 	elseif me.classId == CDOTA_Unit_Hero_AntiMage then
@@ -579,6 +581,42 @@ function KillLina(lsblock,me,ability,damage,adamage,range,target)
 	end
 end
 
+function RikiKill(lsblock,me,ability,damage,range,target)
+	local Spell = me:GetAbility(ability)
+	local E_ = me:GetAbility(3)
+	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
+	if Spell.level > 0 and E_.level > 0 and SleepCheck("riki")then
+		local Dmg1 = damage[Spell.level]
+		local bs = {0.5,0.75,1,1.25}
+		local Dmg2 = bs[E_.level]*me.agilityTotal+me.dmgMin+me.dmgBonus
+		local Range = GetRange(Spell,range)
+		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
+		for i,v in ipairs(enemies) do
+			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
+				local hand = v.handle
+				if not hero[hand] then
+					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+				end
+				if v.visible and v.alive and v.health > 0 then
+					hero[hand].visible = draw
+					local DmgM = math.floor(v:DamageTaken(Dmg1,DAMAGE_MAGC,me))
+					local DmgS = math.floor(v:DamageTaken(Dmg2,DAMAGE_PHYS,me))
+					local DmgF = math.floor(v.health - DmgS - DmgM + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
+					hero[hand].text = " "..DmgF
+					if me.activity ~= 424 and activ and not me:IsChanneling() and me:CanAttack() then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS+DmgM) then
+							KSCastSpell(Spell,v,me,lsblock) Sleep(1200,"riki") break
+						end
+					end
+				elseif hero[hand].visible then
+					hero[hand].visible = false
+				end
+			end
+		end
+	end
+end
+
 function GetDmg(lvl,me,tab1,tab2)
 	local baseDmg = tab1[lvl]
 	if not tab2 then 
@@ -793,7 +831,7 @@ end
 
 function KillStealer(hero)
 	local hId = hero.classId
-	if hId == CDOTA_Unit_Hero_AncientApparition or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_FacelessVoid or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Oracle or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_Riki or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren then 
+	if hId == CDOTA_Unit_Hero_AncientApparition or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_FacelessVoid or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Oracle or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren then 
 		return true
 	end
 	return false
