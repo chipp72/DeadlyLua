@@ -69,6 +69,11 @@ ResTable = {
 		}
         },
 	-- Settings for 16:10
+	{1024,600,{
+		rune       = {x = 210, y = 4},
+		minimap    = {px = 8, py = 8, h = 146, w = 151},
+		}
+	},
 	{1280,768,{
 		rune       = {x = 236 , y = 6},
 		minimap    = {px = 8, py = 8, h = 186, w = 193},
