@@ -11,8 +11,6 @@ config:Load()
 
 local ExtraMinesInfo = config.ExtraMinesInfo
 
---local ExtraMinesInfo = false
-
 --sunstrike, torrent, and other
 local effects = {}
 --arrow
@@ -31,7 +29,7 @@ MinesInfo["npc_dota_techies_land_mine"] = 150
 MinesInfo["npc_dota_techies_stasis_trap"] = 450
 MinesInfo["npc_dota_techies_remote_mine"] = 425
 --all
-local img = {} local sleeep = {} local heroes = {}
+local img = {} local sleeep = {} local sleeeep = {} local heroes = {} local illsuion = {}
 local stage = 1	local tinkertick = 0
 local reg = false
 --drawMgr
@@ -74,27 +72,30 @@ Range = {122,122,122,122},
 function Main(tick)
 
 	if not client.connected or client.loading or client.console or not SleepCheck() then return end
-
 	local me = entityList:GetMyHero() if not me then return end
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
-	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO, illusion = false})
+	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO})
 	local projet = entityList:GetProjectiles({})
 	local team = me.team
 	for i,v in ipairs(hero) do
-		if v.team ~= team then
-			local id = v.classId
-			if id == CDOTA_Unit_Hero_Mirana then Arrow(cast,team,v.visible,"mirana") end
-			if id == CDOTA_Unit_Hero_SpiritBreaker then Charge(cast,team,v.visible,v:GetAbility(1),hero,"spirit_breaker") end
-			if id == CDOTA_Unit_Hero_Life_Stealer then Infest(team,hero,"life_stealer") end
-			if id == CDOTA_Unit_Hero_Sniper then Snipe(team,hero,"sniper") end
-			if id == CDOTA_Unit_Hero_Windrunner or id == CDOTA_Unit_Hero_Pudge then RangeCast(v) end
-			if id == CDOTA_Unit_Hero_Rubick then WhatARubick(hero,team,v.visible,v:GetAbility(5),cast) end			
-			if id == CDOTA_Unit_Hero_AncientApparition then Ancient(cast,team,hero,"ancient_apparition") end
-			if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKa(v) end
-			if id == CDOTA_Unit_Hero_Rattletrap  then Tinker(team,v.visible,cast,tick) end
-			if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
-			if id == CDOTA_Unit_Hero_Techies then Mines(team) end
-			if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then Trap(team) end
+		if v.team ~= team then 
+			if not v:IsIllusion() then
+				local id = v.classId
+				if id == CDOTA_Unit_Hero_Mirana then Arrow(cast,team,v.visible,"mirana") end
+				if id == CDOTA_Unit_Hero_SpiritBreaker then Charge(cast,team,v.visible,v:GetAbility(1),hero,"spirit_breaker") end
+				if id == CDOTA_Unit_Hero_Life_Stealer then Infest(team,hero,"life_stealer") end
+				if id == CDOTA_Unit_Hero_Sniper then Snipe(team,hero,"sniper") end
+				if id == CDOTA_Unit_Hero_Windrunner or id == CDOTA_Unit_Hero_Pudge then RangeCast(v) end
+				if id == CDOTA_Unit_Hero_Rubick then WhatARubick(hero,team,v.visible,v:GetAbility(5),cast) end			
+				if id == CDOTA_Unit_Hero_AncientApparition then Ancient(cast,team,hero,"ancient_apparition") end
+				if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKa(v) end
+				if id == CDOTA_Unit_Hero_Rattletrap  then Tinker(team,v.visible,cast,tick) end
+				if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
+				if id == CDOTA_Unit_Hero_Techies then Mines(team) end
+				if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then Trap(team) end
+			else
+				Illision(v,tick)
+			end
 		end
 	end
 	
@@ -197,7 +198,7 @@ function Project(proj,tick)
 			end
 		end	
 		for i,v in ipairs(heroes) do
-			if img[v].visible == true then
+			if img[v].visible then
 				if tick >= sleeep[v] + 1500 then
 					img[v].visible = false
 				end
@@ -205,6 +206,18 @@ function Project(proj,tick)
 		end
 		Sleep(225,"pr")
 	end	
+end
+
+function Illision(v,tick)
+	if not illsuion[v.handle] then
+		illsuion[v.handle] = drawMgr:CreateRect(0,0,18,18,0x000000ff)
+		sleeeep[v.handle] = tick + 2000
+		local Minimap = MapToMinimap(v.position.x,v.position.y)
+		illsuion[v.handle].x = Minimap.x-10
+		illsuion[v.handle].y = Minimap.y-10
+		illsuion[v.handle].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))
+	end
+		illsuion[v.handle].visible = (not v.visible and sleeeep[v.handle] >= tick)
 end
 
 function RangeCast(v)
@@ -418,7 +431,7 @@ function Tinker(team,status,cast,tick)
 			TKMinimap = nil
 			tinkertick = 0
 			TKicon.visible = false
-			Sleep(14000,"tinker")
+			Sleep(13000,"tinker")
 		end			
 	end
 end
@@ -495,27 +508,33 @@ function Trap(team)
 	end
 end		
 
-function Roha()	
-	local rosh = entityList:FindEntities({classId=CDOTA_Unit_Roshan})[1]
-	if stage == 1 then
-		RoshanSideMessage("Respawn in","8:00-11:00")
-		stage = 2
-		sleep = math.floor(client.gameTime)		
-	elseif sleep + 300 <= math.floor(client.gameTime) and stage == 2 then
-		RoshanSideMessage("Respawn in:","3:00-6:00")
-		stage = 3
-	elseif sleep + 360 <= math.floor(client.gameTime) and stage == 3 then
-		RoshanSideMessage("Respawn in:","2:00-5:00")
-		stage = 4
-	elseif sleep + 420 <= math.floor(client.gameTime) and stage == 4 then	
-		RoshanSideMessage("Respawn in:","1:00-4:00")
-		stage = 5
-	elseif rosh and rosh.alive and stage == 5 then
-		stage = 1
-		RoshanSideMessage("Respawn","00:00")	
-		RoshanSideMessage("Respawn","00:00")	
-		reg = false
-		script:UnregisterEvent(Roha)
+function Roha()
+	if SleepCheck("Roshan") then
+		local rosh = entityList:FindEntities({classId=CDOTA_Unit_Roshan})[1]
+		if stage == 1 then
+			RoshanSideMessage("Respawn in","8:00-11:00")
+			stage = 2
+			sleep = math.floor(client.gameTime)		
+		elseif sleep + 300 <= math.floor(client.gameTime) and stage == 2 then
+			RoshanSideMessage("Respawn in:","3:00-6:00")
+			stage = 3
+		elseif sleep + 360 <= math.floor(client.gameTime) and stage == 3 then
+			RoshanSideMessage("Respawn in:","2:00-5:00")
+			stage = 4
+		elseif sleep + 420 <= math.floor(client.gameTime) and stage == 4 then	
+			RoshanSideMessage("Respawn in:","1:00-4:00")
+			stage = 5
+		elseif sleep + 480 <= math.floor(client.gameTime) and stage == 5 then	
+			RoshanSideMessage("Respawn in:","0:00-3:00")
+			stage = 6
+		elseif rosh and rosh.alive and stage == 6 then
+			stage = 1
+			RoshanSideMessage("Respawn","00:00")	
+			RoshanSideMessage("Respawn","00:00")	
+			reg = false
+			script:UnregisterEvent(Roha)
+		end
+		Sleep(3000,"Roshan")
 	end
 end
 
@@ -621,10 +640,10 @@ function GameClose()
 		script:UnregisterEvent(Roha)
 		stage = 1
 		reg = false
-	end	
+	end	sleeeep = {}
 	effects = {} TArrow = {} TBoat = {} TS = {} 
 	speeed = 600 RC = {} ss = {} MS = {} tabl = {}
-	img = {} sleeep = {} heroes = {}
+	img = {} sleeep = {} heroes = {} illsuion = {}
 	icon.visible = false
 	PKIcon.visible = false
 	TInfest.visible = false
