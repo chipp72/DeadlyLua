@@ -109,8 +109,8 @@ txxB = 2.527
 txxG = 3.47
 end
 
-local rate = client.screenSize.x/testX
-local con = client.screenSize.x/1600
+local rate = 1920/testX
+local con = 1920/1600
 if con < 1 then	con = 1 end
 --top panel coordinate
 local x_ = tpanelHeroSize*(client.screenSize.x/testX)
@@ -449,7 +449,7 @@ function Rune()
 		elseif runeType == 5 then
 				filename = "bounty"
 		end
-		local runeMinimap = MapToMinimap(v)
+		local runeMinimap = MapToMinimap(pos,v.position.y)
 		rune[pos].visible = true
 		rune[pos].x = runeMinimap.x-20/2
 		rune[pos].y = runeMinimap.y-20/2
@@ -467,7 +467,7 @@ function Courier(me)
 	
 		if v.visible and v.alive then
 			cours[hand].visible = true
-			local courMinimap = MapToMinimap(v)
+			local courMinimap = MapToMinimap(v.position.x,v.position.y)
 			cours[hand].x,cours[hand].y = courMinimap.x-10,courMinimap.y-6
 			local flying = v:GetProperty("CDOTA_Unit_Courier","m_bFlyingCourier")
 			if flying then
@@ -517,9 +517,9 @@ end
 function GetXX(ent)
 	local team = ent.team
 	if team == 2 then		
-		return client.screenSize.x/txxG + 1
+		return client.screenSize.x/txxG + 2 
 	elseif team == 3 then
-		return client.screenSize.x/txxB + 1
+		return client.screenSize.x/txxB
 	end
 end
 
