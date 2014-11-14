@@ -14,7 +14,7 @@
 --Combo key - T
 
 require("libs.Utils")
-require("libs.ScreenPosition")
+require("libs.ScriptConfig")
 
 config = ScriptConfig.new()
 config:SetParameter("Combo", "T", config.TYPE_HOTKEY)
