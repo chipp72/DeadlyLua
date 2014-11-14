@@ -14,7 +14,6 @@
 --Combo key - T
 
 require("libs.Utils")
-require("libs.ScriptConfig")
 require("libs.ScreenPosition")
 
 config = ScriptConfig.new()
