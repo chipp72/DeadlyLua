@@ -308,7 +308,7 @@ function Tick(tick)
 						times = tick + 4000
 					end
 				end				
-			elseif (count ~= 0 and combo[count].spell and combo[count].spell.cd > 0) or (times and tick > times) then
+			elseif (times and tick > times) then
 				Console(0)
 				count = 0
 				times = nil
