@@ -3,14 +3,14 @@
 --randomly found an old script, maybe someone will be useful
 --screen http://imgur.com/GZPbl5G,RIyiEvZ,5gpiyzg#0
 
---how to use:
---download texture https://mega.co.nz/#!8AZiFAbY!kMdEz0Fezz6cRzpVPrsNJTuUd4RFwHqDSI3cOV51U34 and unpack to nyanui/other
---change config for u (autoattack and autottack after spell)
---сверху слева будет икнка с мечами, нужно нажать на нее
---нажать на скилл/итем и переместить его в нужный слот
---если нужно удалить, нажимаем на правую кнопку мыши по скиллу/предмуте в последовательности
---выбрать таргет(me,enemy)
---если комбо например с еулом, можно постаить задержку например 1.6 сек (тоже нажатием левой кнопки, для обнление нажми на стрелку)
+-- how to use:
+-- 1)Download texture https://mega.co.nz/#!8AZiFAbY!kMdEz0Fezz6cRzpVPrsNJTuUd4RFwHqDSI3cOV51U34 and unpack to nyanui/other
+-- 2)Change config for u (autoattack and autottack after spell)
+-- 3)You need to click on icon with swords
+-- 4)Then click on the skill/item is and move it into the correct slot
+-- 5)If you want to delete, click on the right mouse button on the skill/item in sequence
+-- 6)Select Target (me, enemy), the same like 
+-- 7)If such a combo with eulom, you can put a delay for example 1.6 seconds (also by pressing the left button for reset click on the arrow)
 --Combo key - T
 
 require("libs.Utils")
