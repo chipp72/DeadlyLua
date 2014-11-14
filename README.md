@@ -1,3 +1,3 @@
 
 
-ery day I'm star in the city.
+Every day I'm star in the city.
