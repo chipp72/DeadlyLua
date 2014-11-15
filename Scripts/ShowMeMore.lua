@@ -100,7 +100,6 @@ function Main(tick)
 	end
 	
 	DirectBase(cast,team)
-	Project(projet,tick)
 	
 	Sleep(125)
 
