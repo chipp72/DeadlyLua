@@ -1,4 +1,4 @@
---<<EZ like ti3 for alliance xD. gui only for 16x9. описание в начале кода скрипта>>
+--<<EZ like ti3 for alliance xD. gui only for 16x9. Description in script code. Hold ("T")>>
 
 --randomly found an old script, maybe someone will be useful
 --screen http://imgur.com/GZPbl5G,RIyiEvZ,5gpiyzg#0
