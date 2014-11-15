@@ -11,7 +11,7 @@
 -- 5)If you want to delete, click on the right mouse button on the skill/item in sequence
 -- 6)Select Target (me, enemy), the same like 
 -- 7)If such a combo with eulom, you can put a delay for example 1.6 seconds (also by pressing the left button for reset click on the arrow)
---Combo key - T
+--Combo key - hold (T)
 
 require("libs.Utils")
 require("libs.ScriptConfig")
@@ -110,11 +110,11 @@ function Tick(tick)
 				if not combo[a].img then
 					combo[a].inbg = drawMgr:CreateRect(-4*rate+70*a*rate,188*rate,36*rate,36*rate,0xFFFFFF02) combo[a].inbg.visible = false
 					combo[a].rect = drawMgr:CreateRect(-4*rate+70*a*rate,188*rate,36*rate,36*rate,0xFFFFFF30,true) combo[a].rect.visible = false
-					combo[a].img = drawMgr:CreateRect(70*a*rate,190*rate,32*rate,32*rate,0xFFFFFF30,true) combo[a].img.visible = false								
+					combo[a].img = drawMgr:CreateRect(-2*rate+70*a*rate,190*rate,32*rate,32*rate,0xFFFFFF30,true) combo[a].img.visible = false								
 					combo[a].arrow = drawMgr:CreateRect(33*rate+70*a*rate,200*rate,36*rate,18*rate,0xFFFFFF30,drawMgr:GetTextureId("NyanUI/other/arrow_usual_left")) combo[a].arrow.visible = false					
 					combo[a].sleep = 0.1
 					combo[a].sleepText = drawMgr:CreateText(35*rate+70*a*rate,188*rate,0xFFFFFFFF,"",drawMgr:CreateFont("manabarsFont","Arial",14*rate,500)) combo[a].sleepText.visible = false
-					combo[a].target = drawMgr:CreateText(70*a*rate,225*rate,0xFFFFFFFF,"",drawMgr:CreateFont("manabarsFont","Arial",14*rate,500)) combo[a].target.visible = false
+					combo[a].target = drawMgr:CreateText(-3+70*a*rate,225*rate,0xFFFFFFFF,"",drawMgr:CreateFont("manabarsFont","Arial",14*rate,500)) combo[a].target.visible = false
 					if ComboState then
 						combo[a].bgimg = drawMgr:CreateRect(205*rate+28*a*rate,49*rate,24*rate,24*rate,0xFFFFFF30) combo[a].bgimg.visible = false
 						combo[a].bgret = drawMgr:CreateRect(204*rate+28*a*rate,48*rate,26*rate,26*rate,0xFFFFFF30,true) combo[a].bgret.visible = false
@@ -275,8 +275,11 @@ function Tick(tick)
 	end
 			
 	--yes
-	if loads then		
+	if loads then
+		if times and tick < times then return end
+		times = nil
 		if SleepCheck("123") then
+			print(activatedC)
 			if activatedC then				
 				for a = 1, 6 do
 					local qu = nil					
@@ -304,7 +307,8 @@ function Tick(tick)
 						end
 					end	
 					if a == 6 then 
-						activatedC = false for a = 1,6 do combo[a].sleepCheck = nil end
+						times = tick + 2000
+						activatedC = false for z = 1,6 do combo[z].sleepCheck = nil end
 						me:Attack(enemy)
 						Console(0)
 					end
@@ -334,10 +338,10 @@ function Key(msg,code)
 	if msg ~= KEY_UP then
 		if code == Combo then
 			activatedC = true
+			return true
 		else 
-			activatedC = false
-		end
-		return true
+			activatedC = false			
+		end		
 	end
 	
 	--config stuff
