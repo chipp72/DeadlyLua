@@ -286,7 +286,7 @@ function Tick(tick)
 						count = a
 						if not combo[a].sleepCheck then
 							combo[a].sleepCheck = true							
-							if v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_POINT) or v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_AOE) then
+							if v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_POINT) or (v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_AOE) and not v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_UNIT_TARGET)) then
 								me:SafeCastAbility(v,combo[a].cast.position,qu)
 							elseif v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
 								entityList:GetMyPlayer():ToggleAbility(v,qu)
@@ -305,13 +305,10 @@ function Tick(tick)
 					end	
 					if a == 6 then 
 						activatedC = false for a = 1,6 do combo[a].sleepCheck = nil end
-						times = tick + 4000
+						me:Attack(enemy)
+						Console(0)
 					end
 				end				
-			elseif (times and tick > times) then
-				Console(0)
-				count = 0
-				times = nil
 			end
 		end	
 	end
@@ -331,9 +328,15 @@ function Key(msg,code)
 			activated = not activated
 			return true
 		end
+	end
+	
 	--activate combo
-	elseif msg == KEY_UP and code == Combo then
-		activatedC = not activatedC
+	if msg ~= KEY_UP then
+		if code == Combo then
+			activatedC = true
+		else 
+			activatedC = false
+		end
 		return true
 	end
 	
