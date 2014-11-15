@@ -92,9 +92,6 @@ function Main(tick)
 				if id == CDOTA_Unit_Hero_Rattletrap  then Tinker(team,v.visible,cast,tick) end
 				if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
 				if id == CDOTA_Unit_Hero_Techies then Mines(team) end
-				if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then Trap(team) end
-			else
-				Illision(v,tick)
 			end
 		end
 	end
@@ -173,50 +170,6 @@ function DirectBase(cast,team)
 			end
 		end
 	end
-end
-
-function Project(proj,tick)
-	if SleepCheck("pr") then
-		for i, v in ipairs(proj) do
-			if v.source == nil then
-				local name = v.name
-				if string.sub(name, -11) == "base_attack" then
-					local hero = name:gsub("_base_attack","")
-					if not img[hero] then
-						img[hero] = drawMgr:CreateRect(0,0,18,18,0x000000ff) img[hero].visible = false					
-						table.insert(heroes,hero)
-					elseif img[hero].visible == false then	
-						local minmap = MapToMinimap(v.position.x,v.position.y)
-						img[hero].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..hero)
-						img[hero].x = minmap.x-10
-						img[hero].y = minmap.y-10
-						img[hero].visible = true
-						sleeep[hero] = tick
-					end
-				end
-			end
-		end	
-		for i,v in ipairs(heroes) do
-			if img[v].visible then
-				if tick >= sleeep[v] + 1500 then
-					img[v].visible = false
-				end
-			end
-		end
-		Sleep(225,"pr")
-	end	
-end
-
-function Illision(v,tick)
-	if not illsuion[v.handle] then
-		illsuion[v.handle] = drawMgr:CreateRect(0,0,18,18,0x000000ff)
-		sleeeep[v.handle] = tick + 2000
-		local Minimap = MapToMinimap(v.position.x,v.position.y)
-		illsuion[v.handle].x = Minimap.x-10
-		illsuion[v.handle].y = Minimap.y-10
-		illsuion[v.handle].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))
-	end
-		illsuion[v.handle].visible = (not v.visible and sleeeep[v.handle] >= tick)
 end
 
 function RangeCast(v)
