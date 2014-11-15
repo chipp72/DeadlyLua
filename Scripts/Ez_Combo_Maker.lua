@@ -1,17 +1,17 @@
---<<EZ like ti3 for alliance xD. gui only for 16x9. Description in script code. Hold ("T")>>
+--<<EZ like ti3 for alliance xD. gui only for 16x9. описание в начале кода скрипта>>
 
 --randomly found an old script, maybe someone will be useful
 --screen http://imgur.com/GZPbl5G,RIyiEvZ,5gpiyzg#0
 
 -- how to use:
 -- 1)Download texture https://mega.co.nz/#!8AZiFAbY!kMdEz0Fezz6cRzpVPrsNJTuUd4RFwHqDSI3cOV51U34 and unpack to nyanui/other
--- 2)Change config for u (autoattack and autottack after spell)
+-- 2)Change config for u (autoattack and autottack after spell set like in dota 2)
 -- 3)You need to click on icon with swords
 -- 4)Then click on the skill/item is and move it into the correct slot
 -- 5)If you want to delete, click on the right mouse button on the skill/item in sequence
 -- 6)Select Target (me, enemy), the same like 
 -- 7)If such a combo with eulom, you can put a delay for example 1.6 seconds (also by pressing the left button for reset click on the arrow)
---Combo key - hold (T)
+--Combo key - (T)
 
 require("libs.Utils")
 require("libs.ScriptConfig")
@@ -279,16 +279,15 @@ function Tick(tick)
 		if times and tick < times then return end
 		times = nil
 		if SleepCheck("123") then
-			print(activatedC)
 			if activatedC then				
 				for a = 1, 6 do
 					local qu = nil					
-					if a == 1 then qu = false Console(1) else qu = true	end
+					if a == 1 then Console(1) qu = false else qu = true	end
 					local v = combo[a].spell				
-					if v then
-						count = a
+					if v then						
 						if not combo[a].sleepCheck then
-							combo[a].sleepCheck = true							
+							combo[a].sleepCheck = true	
+							print(a)
 							if v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_POINT) or (v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_AOE) and not v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_UNIT_TARGET)) then
 								me:SafeCastAbility(v,combo[a].cast.position,qu)
 							elseif v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
@@ -306,11 +305,11 @@ function Tick(tick)
 							break
 						end
 					end	
-					if a == 6 then 
+					if a == 6 then
+						Console(0)
 						times = tick + 2000
 						activatedC = false for z = 1,6 do combo[z].sleepCheck = nil end
-						me:Attack(enemy)
-						Console(0)
+						me:Attack(enemy,true)
 					end
 				end				
 			end
@@ -335,13 +334,10 @@ function Key(msg,code)
 	end
 	
 	--activate combo
-	if msg ~= KEY_UP then
-		if code == Combo then
-			activatedC = true
-			return true
-		else 
-			activatedC = false			
-		end		
+	if msg ~= KEY_UP and code == Combo then
+		print("123")
+		activatedC = not activatedC		
+		return true		
 	end
 	
 	--config stuff
