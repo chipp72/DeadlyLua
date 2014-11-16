@@ -103,15 +103,16 @@ end
 do
     screenSize = client.screenSize
     if screenSize.x == 0 and screenSize.y == 0 then
-		print("ensage can't deterime you resolution")
+	print("ensage can't determine your screen resolution, try to launch in window mode")
     end
     for i,v in ipairs(ResTable) do
-		if v[1] == screenSize.x and v[2] == screenSize.y then
-			location = v[3]
-			break
-		elseif i == #ResTable then
-			print("res.lua don't support you resolution")			
-		end
+	if v[1] == screenSize.x and v[2] == screenSize.y then
+		location = v[3]
+		break
+	elseif i == #ResTable then
+		print("res.lua don't support you resolution")
+		break
+	end
     end
 
 end
