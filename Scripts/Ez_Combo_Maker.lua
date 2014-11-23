@@ -43,7 +43,7 @@ function Tick(tick)
 
 	if not client.connected or client.loading or client.console or not SleepCheck() then return end	
 	
-	Sleep(150)
+	Sleep(100)
 
 	local me = entityList:GetMyHero()	
 	if not me then return end
@@ -282,7 +282,7 @@ function Tick(tick)
 			if activatedC then				
 				for a = 1, 6 do
 					local qu = nil					
-					if a == 1 then Console(1) qu = false else qu = true	end
+					if a == 1 then Console(1) qu = false ttack = false else qu = true	end
 					local v = combo[a].spell				
 					if v then						
 						if not combo[a].sleepCheck then
@@ -303,12 +303,17 @@ function Tick(tick)
 							end
 							break
 						end
+						if combo[a].cast.hero and combo[a].cast.team ~= me.team then
+							ttack = true
+						end
 					end	
 					if a == 6 then
 						Console(0)
 						times = tick + 1000
 						activatedC = false for z = 1,6 do combo[z].sleepCheck = nil end
-						me:Attack(enemy,true)
+						if ttack and enemy then
+							me:Attack(enemy,true)							
+						end
 					end
 				end				
 			end
@@ -456,7 +461,7 @@ function TurnRate(pos,me)
 end
 
 function FindTarget(team)
-	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team and v.visible and v.alive and not v.illusion and v.health > 0 end)
+	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team and v.visible and v.alive and not v.illusion end)
 	if #enemy == 0 then
 		return entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team end)[1]
 	elseif #enemy == 1 then
