@@ -48,7 +48,9 @@ function Tick(tick)
 	local me = entityList:GetMyHero()	
 	if not me then return end
 	
-	enemy = FindTarget(me.team)
+	if not activatedC then
+		enemy = FindTarget(me)
+	end
 
 	rec[2].visible = true
 
@@ -283,9 +285,18 @@ function Tick(tick)
 				for a = 1, 6 do
 					local qu = nil					
 					if a == 1 then Console(1) qu = false ttack = false else qu = true	end
-					local v = combo[a].spell				
+					local v = combo[a].spell
 					if v then						
 						if not combo[a].sleepCheck then
+							if combo[a].cast and combo[a].cast.hero and combo[a].cast.team ~= me.team then
+								if combo[a].cast.health == 0 then
+									activatedC = false for z = 1,6 do combo[z].sleepCheck = nil end
+									Console(0) times = tick + 1000
+									break 
+								end
+								combo[a].cast = enemy
+								ttack = true
+							end
 							combo[a].sleepCheck = true	
 							if v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_POINT) or (v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_AOE) and not v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_UNIT_TARGET)) then
 								me:SafeCastAbility(v,combo[a].cast.position,qu)
@@ -302,9 +313,6 @@ function Tick(tick)
 								end
 							end
 							break
-						end
-						if combo[a].cast.hero and combo[a].cast.team ~= me.team then
-							ttack = true
 						end
 					end	
 					if a == 6 then
@@ -460,8 +468,9 @@ function TurnRate(pos,me)
 	end
 end
 
-function FindTarget(team)
-	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team and v.visible and v.alive and not v.illusion end)
+function FindTarget(me)
+	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= me.team and v.visible and v.alive and not v.illusion end)
+	table.sort( enemy, function (a,b) return GetDistance2D(me,a) < GetDistance2D(me,b) end)
 	if #enemy == 0 then
 		return entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team end)[1]
 	elseif #enemy == 1 then
