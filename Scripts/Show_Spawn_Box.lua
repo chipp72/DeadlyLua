@@ -2,11 +2,16 @@
 require("libs.Utils")
 require("libs.ScriptConfig")
 
-config = ScriptConfig.new()
+local config = ScriptConfig.new()
 config:SetParameter("Hotkey", "L", config.TYPE_HOTKEY)
 config:Load()
 
-spots = {
+local toggleKey = config.Hotkey
+
+local check = false
+local play = false
+
+local spots = {
 --radian
 {2240,-4288,3776,-5312}, -- easy
 {2688,-2944, 3776,-4096,1}, -- medium near rune
@@ -24,11 +29,6 @@ spots = {
 {447,3778,1659,2822,1} -- hard camp by mid
 
 }
-
-local toggleKey = config.Hotkey
-
-local check = false
-
 local eff = {}
 local eff1 = {}
 local eff2 = {}
@@ -51,19 +51,13 @@ local effec = "candle_flame_medium" -- ambient_gizmo_model
 
 function Key(msg,code)
 
-	if msg ~= KEY_UP or code ~= toggleKey or client.chat or not client.connected or client.loading or client.console then
+	if msg ~= KEY_UP or code ~= toggleKey or client.chat or client.console then
     	return
     end
-	
-	local me = entityList:GetMyHero()
-	
-	if not me then return end
 	
 	check = (not check)
 
 	for i,k in ipairs(spots) do
-		
-		local vec = Vector(me.position.x,me.position.y,me.position.z)
 		
 		if not eff[i] then
 			
@@ -127,6 +121,14 @@ function GetGround(Vec)
 	return retVector.z
 end
 
+function Load()
+	if PlayingGame() then
+		play = true
+		script:RegisterEvent(EVENT_KEY,Key)
+		script:UnregisterEvent(Load)
+	end
+end
+
 function GameClose()
 	eff = {}
 	eff1 = {}
@@ -134,7 +136,12 @@ function GameClose()
 	eff3 = {}
 	eff4 = {}
 	collectgarbage("collect")
+	if play then
+		script:UnregisterEvent(Key)
+		script:RegisterEvent(EVENT_TICK,Load)
+		play = false
+	end
 end
 
+script:RegisterEvent(EVENT_TICK,Load)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
-script:RegisterEvent(EVENT_KEY,Key)
