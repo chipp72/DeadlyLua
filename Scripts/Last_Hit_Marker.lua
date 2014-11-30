@@ -10,6 +10,7 @@ config:Load()
 
 local rect = {}
 local sleep = 0
+local play = false
 local ex = client.screenSize.x/1600*0.8
 
 local lasthit = config.LastHit
@@ -18,7 +19,8 @@ local denyKey = config.DenayHitKey
 
 function Tick( tick )
 
-	if not client.connected or client.loading or client.console or sleep > tick then return end	
+	if client.console or sleep > tick then return end	
+	
 	sleep = tick + 100
 
 	local me = entityList:GetMyHero()	
@@ -30,59 +32,51 @@ function Tick( tick )
 	end
 
 	local dmg = Damage(me)
-	local creeps = entityList:GetEntities({classId=CDOTA_BaseNPC_Creep_Lane})	
+	local creeps = entityList:GetEntities({classId=CDOTA_BaseNPC_Creep_Lane})
 	
 	for i,v in ipairs(creeps) do
-		local OnScreen = client:ScreenPosition(v.position)	
-		if OnScreen then
-			local offset = v.healthbarOffset
-			if offset == -1 then return end			
-			
-			if not rect[v.handle] then 
-				rect[v.handle] = {}  rect[v.handle] = drawMgr:CreateRect(-4*ex,-32*ex,0,0,0xFF8AB160) rect[v.handle].visible = false 
-				rect[v.handle].entity = v rect[v.handle].entityPosition = Vector(0,0,offset)
-			end
-
-			if v.visible and v.alive and v.health > 0 and v.health < (dmg*(1-v.dmgResist)+1) then				
-				rect[v.handle].visible = true	
-				if v.team == me.team then
-					rect[v.handle].w = 20*ex
-					rect[v.handle].h = 20*ex
-					rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Active_Deny")
-				else
-					rect[v.handle].w = 15*ex
-					rect[v.handle].h = 15*ex
-					rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Active_Coin")
+		if v.spawned then
+			local OnScreen = client:ScreenPosition(v.position)	
+			if OnScreen then
+				local offset = v.healthbarOffset
+				if offset == -1 then return end			
+				
+				if not rect[v.handle] then 
+					rect[v.handle] = drawMgr:CreateRect(-4*ex,-32*ex,0,0,0xFF8AB160) rect[v.handle].entity = v rect[v.handle].entityPosition = Vector(0,0,offset) rect[v.handle].visible = false 					
 				end
-				--------------
-				if lasthit then
-					if IsKeyDown(lasthitKey) then
-						if v.team ~= me.team and me:GetDistance2D(v) < me.attackRange + 200 then
-							entityList:GetMyPlayer():Attack(v)
+
+				if v.visible and v.alive and v.health > 0 and v.health < (dmg*(1-v.dmgResist)+1) then						
+					if v.team == me.team then
+						rect[v.handle].w = 20*ex
+						rect[v.handle].h = 20*ex
+						rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Active_Deny")
+						if LH(v,me.attackRange,me.position,denyKey) then
 							break
 						end
-					elseif IsKeyDown(denyKey) then
-						if v.team == me.team and me:GetDistance2D(v) < me.attackRange + 200 then
-							entityList:GetMyPlayer():Attack(v)
+					else
+						rect[v.handle].w = 15*ex
+						rect[v.handle].h = 15*ex
+						rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Active_Coin")
+						if LH(v,me.attackRange,me.position,lasthitKey) then
 							break
 						end
 					end
-				end		
-				---------------
-			elseif v.visible and v.alive and v.health > (dmg*(1-v.dmgResist)) and v.health < (dmg*(1-v.dmgResist))+88 then
-				rect[v.handle].visible = true
-				if v.team == me.team then
-					rect[v.handle].w = 20*ex
-					rect[v.handle].h = 20*ex
-					rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Passive_Deny")
-				else
-					rect[v.handle].w = 15*ex
-					rect[v.handle].h = 15*ex
-					rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Passive_Coin")
+					rect[v.handle].visible = true
+				elseif v.visible and v.alive and v.health > (dmg*(1-v.dmgResist)) and v.health < (dmg*(1-v.dmgResist))+88 then					
+					if v.team == me.team then
+						rect[v.handle].w = 20*ex
+						rect[v.handle].h = 20*ex
+						rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Passive_Deny")
+					else
+						rect[v.handle].w = 15*ex
+						rect[v.handle].h = 15*ex
+						rect[v.handle].textureId = drawMgr:GetTextureId("NyanUI/other/Passive_Coin")
+					end
+					rect[v.handle].visible = true
+				elseif rect[v.handle].visible then
+					rect[v.handle].visible = false
 				end
-			elseif rect[v.handle].visible then
-				rect[v.handle].visible = false
-			end			
+			end	
 		end
 	end
 
@@ -99,11 +93,34 @@ function Damage(me)
 	return dmg
 end
 
+function LH(v,range,position,key)
+	if lasthit then
+		if IsKeyDown(key) then
+			if v:GetDistance2D(position) < range + 200 then
+				entityList:GetMyPlayer():Attack(v)
+				return true
+			end
+		end
+	end
+end
+
+function Load()
+	if PlayingGame() then
+		play = true
+		script:RegisterEvent(EVENT_TICK,Tick)
+		script:UnregisterEvent(Load)
+	end
+end
 
 function GameClose()
 	rect = {}
 	collectgarbage("collect")
+	if play then
+		script:UnregisterEvent(Tick)
+		script:RegisterEvent(EVENT_TICK,Load)
+		play = false
+	end
 end
- 
-script:RegisterEvent(EVENT_CLOSE, GameClose)
-script:RegisterEvent(EVENT_TICK,Tick)
+
+script:RegisterEvent(EVENT_TICK,Load)
+script:RegisterEvent(EVENT_CLOSE,GameClose)
