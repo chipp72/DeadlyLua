@@ -2,7 +2,7 @@
 require("libs.Utils")
 require("libs.ScriptConfig")
 
-config = ScriptConfig.new()
+local config = ScriptConfig.new()
 config:SetParameter("Hotkey", "48", config.TYPE_HOTKEY)
 config:Load()
 
@@ -11,15 +11,15 @@ local xx = client.screenSize.x/300
 local yy = client.screenSize.y/1.55
 
 local activated = true 
+local play = false
 local sleep = 250
 local icon = drawMgr:CreateRect(xx,yy,36,24,0x000000ff,drawMgr:GetTextureId("NyanUI/items/dagon")) icon.visible = false
 local rect = drawMgr:CreateRect(xx-1,yy-1,26,25,0xFFFFFF90,true) rect.visible = false
 local dmg = {400,500,600,700,800}
- 
---Главная функция
+
 function Tick(tick)
  
-	if not client.connected or client.loading or client.console or tick < sleep then return end
+	if client.console or tick < sleep then return end
 	
 	sleep = tick + 200
 
@@ -40,7 +40,7 @@ function Tick(tick)
 		if not me:IsChanneling() and Nyx(me) then
 			for i = 1,#enemy do
 				local v = enemy[i]
-				if not v:IsIllusion() and v.health > 0 and GetDistance2D(v,me) < dagon.castRange and v:CanDie() then
+				if not v:IsIllusion() and GetDistance2D(v,me) < dagon.castRange+25 and v:CanDie() then
 					if not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") and not v:IsLinkensProtected() then
 						if v.health < v:DamageTaken(dmgD, DAMAGE_MAGC, me) then
 							me:CastAbility(dagon,v)
@@ -60,24 +60,39 @@ function Nyx(target)
 	return true
 end
 
-function Draw(one,two)
-	if one and two then
+function Draw(a,b)
+	if a and b then
 		return true
 	end
 	return false
 end
 
-function Key()
-	if not client.chat and IsKeyDown(key) then
+function Key(msg,code)
+	if msg ~= KEY_UP and code == key and not client.chat then
 		activated = not activated
+	end
+end
+
+function Load()
+	if PlayingGame() then
+		play = true
+		script:RegisterEvent(EVENT_TICK,Tick)
+		script:RegisterEvent(EVENT_KEY,Key)
+		script:UnregisterEvent(Load)
 	end
 end
 
 function GameClose()
 	rect.visible = false
-	icon.visible = false	
+	icon.visible = false
+	activated = true
+	if play then
+		script:UnregisterEvent(Key)
+		script:UnregisterEvent(Tick)
+		script:RegisterEvent(EVENT_TICK,Load)
+		play = false
+	end
 end
- 
-script:RegisterEvent(EVENT_CLOSE,GameClose) 
-script:RegisterEvent(EVENT_KEY,Key)
-script:RegisterEvent(EVENT_TICK,Tick)
+
+script:RegisterEvent(EVENT_TICK,Load)
+script:RegisterEvent(EVENT_CLOSE,GameClose)
