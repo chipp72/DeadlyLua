@@ -30,8 +30,10 @@ local spells = {} local combo = {} local all = {} local rec = {}
 rec[1] = drawMgr:CreateRect(18*rate,42*rate,490*rate,222*rate,0x00000090,drawMgr:GetTextureId("NyanUI/other/CM_def")) rec[1].visible = false
 rec[2] = drawMgr:CreateRect(167*rate,6*rate,25*rate,24*rate,0xFFFFFF30,drawMgr:GetTextureId("NyanUI/other/CM_buttom")) rec[2].visible = false
 rec[3] = drawMgr:CreateText(205*rate,67*rate,0xFFFFFFFF,"Combo Maker",drawMgr:CreateFont("manabarsFont","Arial",18*rate,700)) rec[3].visible = false
-rec[4] = drawMgr:CreateRect(156*rate,26*rate,260*rate,60*rate,0xFFFFFF30,drawMgr:GetTextureId("NyanUI/other/CM_status_1")) rec[4].visible = false
+rec[4] = drawMgr:CreateRect(156*rate,26*rate,270*rate,60*rate,0xFFFFFF30,drawMgr:GetTextureId("NyanUI/other/CM_status_1")) rec[4].visible = false
 rec[5] = drawMgr:CreateText(175*rate,52*rate,0xFFFFFF90,"State:",drawMgr:CreateFont("manabarsFont","Arial",18*rate,700)) rec[5].visible = false
+rec[6] = drawMgr:CreateText(175*rate,52*rate,0xFFFFFF90,"Hero:",drawMgr:CreateFont("manabarsFont","Arial",18*rate,700)) rec[6].visible = false
+rec[7] = drawMgr:CreateRect(220*rate,54*rate,16*rate,16*rate,0xFFFFFF30) rec[7].visible = false
 local icon = drawMgr:CreateRect(0,0,0,32*rate,0x000000ff) icon.visible = false
 local Combo = config.Combo
 local AutoAttack = config.AutoAttack
@@ -41,7 +43,7 @@ local activated = false local activatedC = false local enemy = nil local count =
 
 function Tick(tick)
 
-	if not client.connected or client.loading or client.console or not SleepCheck() then return end	
+	if client.console or not SleepCheck() then return end	
 	
 	Sleep(100)
 
@@ -49,7 +51,7 @@ function Tick(tick)
 	if not me then return end
 	
 	if not activatedC then
-		enemy = FindTarget(me)
+		enemy = FindTarget(me.team)
 	end
 
 	rec[2].visible = true
@@ -60,6 +62,8 @@ function Tick(tick)
 		if rec[4].visible then
 			rec[4].visible = false
 			rec[5].visible = false
+			rec[6].visible = false
+			rec[7].visible = false
 			for a = 1, 6 do
 				if combo[a].bgret.visible then
 					combo[a].bgret.visible = false
@@ -228,9 +232,7 @@ function Tick(tick)
 			end
 		end
 		if loads and ComboState then
-			local countt = 0
-			rec[4].visible = true
-			rec[5].visible = true
+			local countt = 0				
 			for a = 1, 6 do
 				local Spell = combo[a].spell
 				if Spell then
@@ -271,8 +273,17 @@ function Tick(tick)
 						combo[a].bg.visible = false
 					end
 				end
+			end	
+			local numb = 90*rate+30*countt*rate+65*rate
+			rec[4].w = numb
+			rec[6].x = 175*rate + numb - 95*rate
+			rec[7].x = 175*rate + numb - 50*rate
+			rec[7].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..enemy.name:gsub("npc_dota_hero_",""))
+			
+			for z = 4,7 do
+				rec[z].visible = true
 			end
-			rec[4].w = 90*rate+30*countt*rate
+			
 		end
 	end
 			
@@ -284,7 +295,7 @@ function Tick(tick)
 			if activatedC then				
 				for a = 1, 6 do
 					local qu = nil					
-					if a == 1 then Console(1) qu = false ttack = false else qu = true	end
+					if a == 1 then Console(1) qu = false else qu = true end
 					local v = combo[a].spell
 					if v then						
 						if not combo[a].sleepCheck then
@@ -294,8 +305,7 @@ function Tick(tick)
 									Console(0) times = tick + 1000
 									break 
 								end
-								combo[a].cast = enemy
-								ttack = true
+								combo[a].cast = enemy								
 							end
 							combo[a].sleepCheck = true	
 							if v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_POINT) or (v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_AOE) and not v:IsBehaviourType(LuaEntityAbility.BEHAVIOR_UNIT_TARGET)) then
@@ -319,9 +329,6 @@ function Tick(tick)
 						Console(0)
 						times = tick + 1000
 						activatedC = false for z = 1,6 do combo[z].sleepCheck = nil end
-						if ttack and enemy then
-							me:Attack(enemy,true)							
-						end
 					end
 				end				
 			end
@@ -468,11 +475,10 @@ function TurnRate(pos,me)
 	end
 end
 
-function FindTarget(me)
-	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= me.team and v.visible and v.alive and not v.illusion end)
-	table.sort( enemy, function (a,b) return GetDistance2D(me,a) < GetDistance2D(me,b) end)
+function FindTarget(teams)
+	local enemy = entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= teams and v.visible and v.alive and not v.illusion end)
 	if #enemy == 0 then
-		return entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= team end)[1]
+		return entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.team ~= teams end)[1]
 	elseif #enemy == 1 then
 		return enemy[1]	
 	else
@@ -482,7 +488,21 @@ function FindTarget(me)
 	end
 end
 
-function GameClose()	
+function Load()
+	if PlayingGame() then		
+		script:RegisterEvent(EVENT_TICK,Tick)
+		script:RegisterEvent(EVENT_KEY,Key)
+		script:UnregisterEvent(Load)
+	end
+end
+
+function GameClose()
+	if play then
+		script:UnregisterEvent(Tick)
+		script:UnregisterEvent(Key)
+		script:RegisterEvent(EVENT_TICK,Load)
+		play = false
+	end
 	for i = 1, #rec do
 		rec[i].visible = false
 	end
@@ -492,6 +512,5 @@ function GameClose()
 	collectgarbage("collect")
 end
 
+script:RegisterEvent(EVENT_TICK,Load)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
-script:RegisterEvent(EVENT_TICK,Tick)
-script:RegisterEvent(EVENT_KEY,Key)
