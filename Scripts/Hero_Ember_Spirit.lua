@@ -48,7 +48,7 @@ function GameClose()
 	if play then
 		script:UnregisterEvent(EmberKey)
 		script:RegisterEvent(EVENT_TICK,Load)
-		stuff.play = false
+		play = false
 	end
 end
 
