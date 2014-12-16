@@ -3,13 +3,12 @@
 require("libs.Utils")
 require("libs.ScriptConfig")
 
-config = ScriptConfig.new()
+local config = ScriptConfig.new()
 config:SetParameter("Hotkey", "W", config.TYPE_HOTKEY)
 config:Load()
 
 local key = config.Hotkey
 local play = false
-
 
 function EmberKey(msg,code)
 
@@ -29,7 +28,6 @@ function EmberKey(msg,code)
 	end			
 
 end
-
 
 function Load()
 	if PlayingGame() then
