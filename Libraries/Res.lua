@@ -85,6 +85,10 @@ ResTable = {
 		minimap    = {px = 27, py = 28, h = 356, w = 391},
 		}
 	},
+	{2880,1800,{
+		minimap    = {px = 37, py = 38, h = 396, w = 4301},
+		}
+	},
 }
 
 function MapToMinimap(x, y)
