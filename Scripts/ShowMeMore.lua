@@ -3,45 +3,74 @@
 require("libs.Utils")
 require("libs.Res")
 require("libs.SideMessage")
-require("libs.ScriptConfig")
 
-local config = ScriptConfig.new()
-config:SetParameter("ExtraMinesInfo", true)
-config:Load()
-
-local ExtraMinesInfo = config.ExtraMinesInfo
+local effect = {}
 
 --sunstrike, torrent, and other
-local effects = {}
+effect.fromcast = {}
 --arrow
-local TArrow = {}
+effect.Arrow = {}
+local ArrowS = nil
+local ArrowV = nil
 --boat
-local TBoat = {}
+effect.Boat = {}
+local BoatS = nil
+local BoatV = nil
+--cold
+effect.Cold = {}
+local BlastM = nil
 --charge
-local speeed = 600
-local speed = {600,650,700,750}
+effect.speed = {600,650,700,750}
+local speed = 600
+local ChargeS = nil
 --pudge and wr
-local RC = {} local ss = {}
+effect.RC = {} effect.RangeCast = {}
 --teches
-local MS = {} local TS = {} local MinesInfo = {}
-local tabl = {}
-MinesInfo["npc_dota_techies_land_mine"] = 150
-MinesInfo["npc_dota_techies_stasis_trap"] = 450
-MinesInfo["npc_dota_techies_remote_mine"] = 425
---all
-local img = {} local sleeep = {} local sleeeep = {} local heroes = {} local illsuion = {}
-local stage = 1	local tinkertick = 0
-local reg = false
+effect.MS = {} 
+--clock
+local clockTime = 0
+--rubick
+effect.rubick = {}
+for i = 1,5 do 
+	effect.rubick[i] = false
+end
+local stage = nil
+--trap
+effect.TS = {}
+--in fog
+effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {}
+--smoke
+effect.last = {}
+--timers
+effect.times = {}
 --drawMgr
-local icon = drawMgr:CreateRect(0,0,18,18,0x000000ff) icon.visible = false
-local PKIcon = drawMgr:CreateRect(0,0,18,18,0x000000ff) PKIcon.visible = false
-local TInfest = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) TInfest.visible = false
-local TAssis = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) TAssis.visible = false
-local TKicon = drawMgr:CreateRect(0,0,18,18,0x000000ff) TKicon.visible = false
-local TCharge1 = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) TCharge1.visible = false
-local TCharge2 = drawMgr:CreateRect(0,0,18,18,0xFF8AB160) TCharge2.visible = false
+effect.ArrowI = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.ArrowI.visible = false
+effect.PAI = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.PAI.visible = false
+effect.InfestI = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) effect.InfestI.visible = false
+effect.SnipeI = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) effect.SnipeI.visible = false
+effect.CWI = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.CWI.visible = false
+effect.ChargeI1 = drawMgr:CreateRect(-10,-60,26,26,0xFF8AB160) effect.ChargeI1.visible = false
+effect.ChargeI2 = drawMgr:CreateRect(0,0,18,18,0xFF8AB160) effect.ChargeI2.visible = false
+effect.HeroIcon = drawMgr:CreateRect(0,0,16,16,0xffffffff) effect.HeroIcon.visible = false
+effect.Line = drawMgr:CreateLine(0,0,0,0,0xffffffff) effect.Line.visible = false
 
-spells = {
+--ShowHero
+effect.key = string.byte("G")
+effect.key1 = string.byte("I")
+
+effect.activated = false
+effect.activated1 = false
+effect.Herostart = false
+effect.HeroSleep = 0
+effect.HeroIcon = drawMgr:CreateRect(0,0,16,16,0xffffffff) effect.HeroIcon.visible = false
+effect.Line = drawMgr:CreateLine(0,0,0,0,0xffffffff) effect.Line.visible = false
+
+effect.smallFont = drawMgr:CreateFont("defaultFont","Arial",25,1000)
+effect.bigFont = drawMgr:CreateFont("defaultFont","Arial",40,1000)
+effect.whilesize = 180*(math.floor(client.screenSize.x/160))/10
+local Herotarget = nil
+
+effect.spells = {
 -- modifier name, effect name, second effect, aoe-range
 {"modifier_invoker_sun_strike", "invoker_sun_strike_team","invoker_sun_strike_ring_b",175},
 {"modifier_lina_light_strike_array", "lina_spell_light_strike_array_ring_collapse","lina_spell_light_strike_array_sphere",225},
@@ -49,7 +78,11 @@ spells = {
 {"modifier_leshrac_split_earth_thinker", "leshrac_split_earth_b","leshrac_split_earth_c",225}
 }
 
-RangeCastList = {
+effect.HexList = {"modifier_sheepstick_debuff","modifier_lion_voodoo","modifier_shadow_shaman_voodoo"}
+effect.SilenceList = {"modifier_skywrath_mage_ancient_seal","modifier_earth_spirit_boulder_smash_silence","modifier_orchid_malevolence_debuff","modifier_night_stalker_crippling_fear",
+"modifier_silence","modifier_silencer_last_word_disarm","modifier_silencer_global_silence","modifier_doom_bringer_doom","modifier_legion_commander_duel"}
+
+effect.List = {
 --hero with table
 npc_dota_hero_pudge =
 {
@@ -57,7 +90,7 @@ Spell = 1,
 Start = {1374,1274,1174,1074},
 End = {1280,1170,1060,950},
 Count = 10,
-Range = {70,90,110,130},
+Range = {100,110,120,130},
 },
 npc_dota_hero_windrunner =
 {
@@ -65,40 +98,47 @@ Spell = 2,
 Start = {874,874,874,874},
 End = {710,710,710,710},
 Count = 15,
-Range = {122,122,122,122},
+Range = {180,180,180,180},
 }
 }
 
 function Main(tick)
 
-	if not client.connected or client.loading or client.console or not SleepCheck() then return end
+	if client.console or not SleepCheck() then return end
 	local me = entityList:GetMyHero() if not me then return end
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO})
-	local projet = entityList:GetProjectiles({})
+	--local projet = entityList:GetProjectiles({})
 	local team = me.team
 	for i,v in ipairs(hero) do
 		if v.team ~= team then 
 			if not v:IsIllusion() then
 				local id = v.classId
-				if id == CDOTA_Unit_Hero_Mirana then Arrow(cast,team,v.visible,"mirana") end
-				if id == CDOTA_Unit_Hero_SpiritBreaker then Charge(cast,team,v.visible,v:GetAbility(1),hero,"spirit_breaker") end
-				if id == CDOTA_Unit_Hero_Life_Stealer then Infest(team,hero,"life_stealer") end
-				if id == CDOTA_Unit_Hero_Sniper then Snipe(team,hero,"sniper") end
-				if id == CDOTA_Unit_Hero_Windrunner or id == CDOTA_Unit_Hero_Pudge then RangeCast(v) end
-				if id == CDOTA_Unit_Hero_Rubick then WhatARubick(hero,team,v.visible,v:GetAbility(5),cast) end			
-				if id == CDOTA_Unit_Hero_AncientApparition then Ancient(cast,team,hero,"ancient_apparition") end
-				if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKa(v) end
-				if id == CDOTA_Unit_Hero_Rattletrap  then Tinker(team,v.visible,cast,tick) end
-				if id == CDOTA_Unit_Hero_Kunkka then Boat(cast,team) end
-				if id == CDOTA_Unit_Hero_Techies then Mines(team) end
+				if id == CDOTA_Unit_Hero_Mirana then ArrowF(cast,team,v.visible,"mirana") end
+				if id == CDOTA_Unit_Hero_SpiritBreaker then ChargeF(cast,team,v.visible,v:GetAbility(1),hero,"spirit_breaker") end
+				if id == CDOTA_Unit_Hero_Life_Stealer then InfestF(team,hero,"life_stealer") end
+				if id == CDOTA_Unit_Hero_Sniper then SnipeF(team,hero,"sniper") end
+				if id == CDOTA_Unit_Hero_Windrunner or id == CDOTA_Unit_Hero_Pudge then RangeCastF(v) end
+				if id == CDOTA_Unit_Hero_Rubick then WhatARubickF(hero,team,v.visible,v:GetAbility(5),cast) end			
+				if id == CDOTA_Unit_Hero_AncientApparition then AncientF(cast,team,hero,"ancient_apparition") end
+				if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKaF(v) end
+				if id == CDOTA_Unit_Hero_Rattletrap then ClockF(team,v.visible,cast,tick) end
+				if id == CDOTA_Unit_Hero_Kunkka then BoatF(cast,team) end
+				if id == CDOTA_Unit_Hero_Techies then MinesF(team) end
+				if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then TrapF(team) end
+			else
+				Illision(v,tick)
 			end
 		end
 	end
 	
 	DirectBase(cast,team)
+	--Project(projet,tick)
+	ShowSmoke(me.team)
+	--ShowTimers(me.team,tick,hero)
+	--ShowHeroes(me.team,tick)
 	
-	Sleep(125)
+	Sleep(150)
 
 end
 
@@ -109,6 +149,13 @@ function GenerateSideMessage(heroName,spellName)
 	test:AddElement(drawMgr:CreateRect(150,11,40,40,0xFFFFFFFF,drawMgr:GetTextureId("NyanUI/spellicons/"..spellName)))
 end
 
+function SmokeSideMessage(heroName,spellName)
+	local test = sideMessage:CreateMessage(200,60)
+	test:AddElement(drawMgr:CreateRect(10,10,72,40,0xFFFFFFFF,drawMgr:GetTextureId("NyanUI/heroes_horizontal/"..heroName)))
+	test:AddElement(drawMgr:CreateRect(85,1,62,61,0xFFFFFFFF,drawMgr:GetTextureId("NyanUI/other/statpop_question")))
+	test:AddElement(drawMgr:CreateRect(140,13,70,35,0xFFFFFFFF,drawMgr:GetTextureId("NyanUI/items/"..spellName)))
+end
+
 function RoshanSideMessage(title,sms)
 	local test = sideMessage:CreateMessage(200,60)	
 	test:AddElement(drawMgr:CreateRect(5,5,80,50,0xFFFFFFFF,drawMgr:GetTextureId("NyanUI/heroes_horizontal/roshan")))
@@ -116,42 +163,120 @@ function RoshanSideMessage(title,sms)
 	test:AddElement(drawMgr:CreateText(100,25,-1,""..sms.."",drawMgr:CreateFont("defaultFont","Arial",25,500)))
 end
 
-function WhatARubick(hero,team,status,spell,cast)
+
+
+function ShowTimers(teams,tick,enemy)
+
+	if SleepCheck("ShowTimers") then
+
+		for i,v in ipairs(enemy) do
+		
+			if v.team ~= teams and not v:IsIllusion() then
+
+				local offset = v.healthbarOffset
+				if offset == -1 then return end
+				local hand = v.handle
+				if not effect.times[hand] then
+					effect.times[hand] = drawMgr:CreateText(-30,-50,0xFFFFFFFF,"",drawMgr:CreateFont("F13","Arial",20,500)) effect.times[hand].visible = false effect.times[hand].entity = v effect.times[hand].entityPosition = Vector(0,0,offset)			
+				end
+
+				if v.alive and v.visible and v.health > 0 then
+					if v:IsStunned() then
+						local stun = FindStunModifier(v)
+						if stun then
+							effect.times[hand].text = ""..stun
+							effect.times[hand].color = 0xFFFFFFFF
+							effect.times[hand].visible = true
+						end
+					elseif v:IsHexed() then
+						local hex = FindHexOrSilenceModifier(v,effect.HexList)
+						if hex then
+							effect.times[hand].text = ""..hex
+							effect.times[hand].color = 0xFFFF00FF
+							effect.times[hand].visible = true
+						end
+					elseif v:IsSilenced() then
+						local silence = FindHexOrSilenceModifier(v,effect.SilenceList)
+						if silence then
+							effect.times[hand].text = ""..silence
+							effect.times[hand].color = 0xD50000FF
+							effect.times[hand].visible = true
+						end
+					elseif effect.times[hand].visible then
+						effect.times[hand].visible = false
+					end
+				elseif effect.times[hand].visible then
+					effect.times[hand].visible = false
+				end
+				
+			end
+			
+		end	
+		
+		Sleep(100,"ShowTimers")
+		
+	end
+	
+end
+
+function ShowSmoke(teams)
+
+	if SleepCheck("ShowSmoke") then
+
+		local smoke = entityList:GetEntities(function (ent) return ent.type == LuaEntity.TYPE_ITEM and ent.name == "item_smoke_of_deceit" and ent.owner.team ~= teams end)
+		
+		for i = #smoke+1, 1, -1 do
+			if not effect.last[i] then
+				effect.last[i] = {0,0}
+			end
+			if #smoke ~= effect.last[i] then
+				if smoke[i] then
+					effect.last[i] = {#smoke,smoke[i].owner.name}
+				elseif type(effect.last[i][2]) ~= "number" then
+					SmokeSideMessage(effect.last[i][2]:gsub("npc_dota_hero_",""),"smoke_of_deceit")
+					effect.last[i] = {0,0}
+				end
+			end
+		end
+		
+		Sleep(1000,"ShowSmoke")
+		
+	end
+	
+end
+
+function WhatARubickF(hero,team,status,spell,cast)
 	if spell then
 		local name = spell.name
-		local mename = "rubick"
 		if name == "mirana_arrow" then
-			Rarrow = true
-			Arrow(cast,team,status,mename)
+			effect.rubick[1] = true
+			ArrowF(cast,team,status,"rubick")
 		elseif name == "spirit_breaker_charge_of_darkness" then
-			Rcharge = true
-			Charge(cast,team,status,spell,hero,mename)
+			effect.rubick[2] = true
+			ChargeF(cast,team,status,spell,hero,"rubick")
 		elseif name == "life_stealer_infest" then
-			Rinfest = true
-			Infest(team,hero,mename)
+			effect.rubick[3] = true
+			InfestF(team,hero,"rubick")
 		elseif name == "sniper_assassinate" then
-			Rassist = true
-			Snipe(team,hero,mename)
+			effect.rubick[4] = true
+			SnipeF(team,hero,"rubick")
+		elseif name == "techies_land_mines" or name == "techies_stasis_trap" or name == "techies_remote_mines" then			
+			effect.rubick[5] = true
+			MinesF(team)
 		elseif name == "kunkka_ghostship" then
-			Boat(cast,team)
+			BoatF(cast,team)
 		elseif name == "ancient_apparition_ice_blast" then
-			Ancient(cast,team,hero,mename)
-		elseif name == "techies_land_mines" or name == "techies_stasis_trap" or name == "techies_remote_mines" then
-			Rmines = true
-			Mines(team)
-		elseif Rcharge and TCharge1.visible then
-			TCharge1.visible = false TCharge2.visible = false Rcharge = false
-		elseif Rarrow and icon.visible then
-			icon.visible = false Rarrow = false
-			TArrow = {}
-			collectgarbage("collect")
-		elseif Rinfest and TInfest.visible then
-			TInfest.visible = false Rinfest = false
-		elseif Rassist and TAssis.visible then
-			TAssis.visible = false Rassist = false
-		elseif Rmines then
-			MS = {}
-			collectgarbage("collect")
+			AncientF(cast,team,hero,"rubick")			
+		elseif effect.rubick[1] and effect.ArrowI.visible then
+			effect.ArrowI.visible = false effect.rubick[1] = false effect.Arrow = {} collectgarbage("collect")
+		elseif effect.rubick[2] and effect.ChargeI1.visible then
+			effect.ChargeI1.visible.visible = false effect.ChargeI2.visible = false
+		elseif effect.rubick[3] and effect.InfestI.visible then
+			effect.InfestI.visible = false effect.rubick[3] = false
+		elseif effect.rubick[4] and effect.SnipeI.visible then
+			effect.SnipeI.visible = false effect.rubick[4] = false
+		elseif effect.rubick[5] then
+			effect.MS = {} effect.rubick[5] = false	collectgarbage("collect")
 		end
 	end
 end
@@ -160,330 +285,332 @@ function DirectBase(cast,team)
 	for i,v in ipairs(cast) do
 		if v.team ~= team and #v.modifiers > 0 then
 			local modifiers = v.modifiers
-			for i,k in ipairs(spells) do
+			for i,k in ipairs(effect.spells) do				
 				if modifiers[1].name == k[1] and (not k.handle or k.handle ~= v.handle) then
 					k.handle = v.handle
 					local entry = { Effect(v, k[2]),Effect(v, k[3]),  Effect( v, "range_display") }
 					entry[3]:SetVector(1, Vector( k[4], 0, 0) )
-					table.insert(effects, entry)
+					table.insert(effect.fromcast,entry)
 				end
 			end
 		end
 	end
 end
 
-function RangeCast(v)
-	local number = RangeCastList[v.name].Spell
+function Project(proj,tick)
+	if SleepCheck("ShowPreject") then
+		for i, v in ipairs(proj) do
+			if v.source == nil then
+				if string.sub(v.name, -11) == "base_attack" then
+					local hero = v.name:gsub("_base_attack","")
+					if not effect.project[hero] then
+						effect.project[hero] = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.project[hero].visible = false					
+						table.insert(effect.projEnemy,hero)
+					elseif effect.project[hero].visible == false then	
+						local minmap = MapToMinimap(v.position.x,v.position.y)
+						effect.project[hero].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..hero)
+						effect.project[hero].x = minmap.x-10
+						effect.project[hero].y = minmap.y-10
+						effect.project[hero].visible = true
+						effect.projSleep[hero] = tick
+					end
+				end
+			end
+		end	
+		for i,v in ipairs(effect.projEnemy) do
+			if effect.project[v].visible then
+				if tick >= effect.projSleep[v] + 1500 then
+					effect.project[v].visible = false
+				end
+			end
+		end
+		Sleep(225,"ShowPreject")
+	end	
+end
+
+function Illision(v,tick)
+	if SleepCheck("ShowIllusion") then
+		if not effect.illsuion[v.handle] then
+			effect.illsuion[v.handle] = drawMgr:CreateRect(0,0,18,18,0x000000ff)
+			effect.illSleep[v.handle] = tick + 1500
+			local Minimap = MapToMinimap(v.position.x,v.position.y)
+			effect.illsuion[v.handle].x = Minimap.x-10
+			effect.illsuion[v.handle].y = Minimap.y-10
+			effect.illsuion[v.handle].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))
+		end
+		effect.illsuion[v.handle].visible = (not v.visible and effect.illSleep[v.handle] >= tick)
+		Sleep(500,"ShowIllusion")
+	end
+end
+
+function RangeCastF(v)
+	local number = effect.List[v.name].Spell
 	if number then
 		local spell = v:GetAbility(tonumber(number))
 		if spell and spell.cd ~= 0 then
-			local ind = RangeCastList[v.name].End
-			local count = RangeCastList[v.name].Count
-			local range = RangeCastList[v.name].Range
-			local srart = RangeCastList[v.name].Start
-			if math.floor(spell.cd*100) >= srart[spell.level] and not ss[v.handle] then
-				ss[v.handle] = true
-				for a = 1, count do
-					local pss = RCVector(v, range[spell.level]* a)
-					RC[a] = Effect(pss, "blueTorch_flame" )
-					RC[a]:SetVector(1,Vector(0,0,0))
-					RC[a]:SetVector(0, pss)
+			if not effect.RangeCast[v.handle] and math.floor(spell.cd*100) >= effect.List[v.name].Start[spell.level] then
+				effect.RangeCast[v.handle] = true
+				for a = 1, effect.List[v.name].Count do
+					local pss = RCVector(v, effect.List[v.name].Range[spell.level]* a)
+					effect.RC[a] = Effect(pss, "blueTorch_flame" )
+					effect.RC[a]:SetVector(1,Vector(0,0,0))
+					effect.RC[a]:SetVector(0, pss)
 				end
-			elseif (math.floor(spell.cd*100) < ind[spell.level] or v.alive == false) and ss[v.handle] then
-				ss = {}
-				RC = {}
+			elseif effect.RangeCast[v.handle] and (math.floor(spell.cd*100) < effect.List[v.name].End[spell.level] or v.alive == false) then
+				effect.RangeCast = {}
+				effect.RC = {}
 				collectgarbage("collect")
 			end
 		end
 	end
 end
 
-function Arrow(cast,team,status,heroName)
+function ArrowF(cast,team,status,heroName)
 	local arrow = FindArrow(cast,team)
 	if arrow then
-		icon.visible = not status
-		if not start then
+		effect.ArrowI.visible = not status
+		if not ArrowS then
 			GenerateSideMessage(heroName,"mirana_arrow")
-			start = arrow.position
-			POTMMinimap = MapToMinimap(start.x,start.y)
-			icon.x = POTMMinimap.x-10
-			icon.y = POTMMinimap.y-10
-			icon.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
+			ArrowS = arrow.position
+			local Minimap = MapToMinimap(ArrowS.x,ArrowS.y)
+			effect.ArrowI.x = Minimap.x-10
+			effect.ArrowI.y = Minimap.y-10
+			effect.ArrowI.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
 		end
-		if arrow.visibleToEnemy and not vec then
-			vec = arrow.position
-			if GetDistance2D(vec,start) < 50 then
-				vec = nil
+		if arrow.visibleToEnemy and not ArrowV then
+			ArrowV = arrow.position
+			if GetDistance2D(ArrowV,ArrowS) < 50 then
+				ArrowV = nil
 			end
 		end
-		if start and vec and #TArrow == 0 then
+		if ArrowS and ArrowV and #effect.Arrow == 0 then
 			for z = 1,29 do
-				local p = FindAB(start,vec,100*z+100)
-				TArrow[z] = Effect(p, "candle_flame_medium" )
-				TArrow[z]:SetVector(0,p)
+				local p = FindAB(ArrowS,ArrowV,100*z+100)
+				effect.Arrow[z] = Effect(p, "candle_flame_medium" )
+				effect.Arrow[z]:SetVector(0,p)
 			end
 		end
-	elseif start then
-		TArrow = {}		
-		start,vec,POTMMinimap = nil,nil,nil
-		icon.visible = false
+	elseif ArrowS then
+		effect.Arrow = {}		
+		ArrowS,ArrowV = nil,nil
+		effect.ArrowI.visible = false
 		collectgarbage("collect")
 	end
 end
 
-function Charge(cast,team,status,spell,hero,heroName)
-	
-	local target = FindByModifierS(hero,"modifier_spirit_breaker_charge_of_darkness_vision",team)
-	if target then
-		local ISeeBara = not status
-		local clock = client.gameTime
-		if not ISeeBara then time = clock end
-		if spell and spell.level ~= 0 then speeed = speed[spell.level] end
-		local offset = target.healthbarOffset
-		if offset == -1 then return end
-		if not TCharge1.visible then
-			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"spirit_breaker_charge_of_darkness")
-			TCharge1.entity = target
-			TCharge1.entityPosition = Vector(0,0,offset)
-			TCharge1.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
-			TCharge1.visible = true
-		end
-		local Charged = FindCharge(cast)
-		if Charged then
-			if not time then
-				time = clock
-			end
-			local distance = GetDistance2D(Charged,target)
-			local Ddistance = distance - (clock - time)*speeed
-			local minimap = MapToMinimap((Charged.position.x - target.position.x) * Ddistance / distance + target.position.x,(Charged.position.y - target.position.y) * Ddistance / distance + target.position.y)
-			TCharge2.x = minimap.x-10
-			TCharge2.y = minimap.y-10
-			TCharge2.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
-			TCharge2.visible = ISeeBara
-		end
-	elseif TCharge1.visible then
-		time = nil
-		TCharge1.visible = false
-		TCharge2.visible = false
-	end
-	
-end
 
-function Infest(team,hero,heroName)
-	local target = FindByModifierI(hero,"modifier_life_stealer_infest_effect",team)
-	if target then
-		local offset = target.healthbarOffset
-		if offset == -1 then return end
-		if not TInfest.visible then
-			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"life_stealer_infest")
-			TInfest.entity = target
-			TInfest.entityPosition = Vector(0,0,offset)
-			TInfest.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
-			TInfest.visible = true			
-		end
-	elseif TInfest.visible then
-		TInfest.visible = false
-	end
-end
-
-function Snipe(team,hero,heroName)
-	local target = FindByModifierS(hero,"modifier_sniper_assassinate",team)
-	if target then
-		local offset = target.healthbarOffset
-		if offset == -1 then return end
-		if not TAssis.visible then
-			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"sniper_assassinate")
-			TAssis.entity = target
-			TAssis.entityPosition = Vector(0,0,offset)
-			TAssis.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
-			TAssis.visible = true
-		end
-	elseif TAssis.visible then
-		TAssis.visible = false
-	end
-end
-
-function Boat(cast,team)
+function BoatF(cast,team)
 	local ship = FindBoat(cast,team)
 	if ship then
-		if not start1 then
-			start1 = ship.position
+		if not BoatS then
+			BoatS = ship.position
 		end
-		if ship.visibleToEnemy and not vec1 then
-			vec1 = ship.position
-			if GetDistance2D(vec1,start1) < 50 then
-				vec1 = nil
+		if ship.visibleToEnemy and not BoatV then
+			BoatV = ship.position
+			if GetDistance2D(BoatV,BoatS) < 50 then
+				BoatV = nil
 			end
 		end
-		if start1 ~= nil and vec1 ~= nil and not TBoat[1] then
-			local p = FindAB(start1,vec1,1950)
-			TBoat[1] = Effect(p,"range_display")
-			TBoat[1]:SetVector(0,p)
-			TBoat[1]:SetVector(1,Vector(425,0,0))
-			TBoat[2] = Effect(p,"kunkka_ghostship_marker")
-			TBoat[2]:SetVector(0,p)
+		if BoatS ~= nil and BoatV ~= nil and not effect.Boat[1] then
+			local p = FindAB(BoatS,BoatV,1950)
+			effect.Boat[1] = Effect(p,"range_display")
+			effect.Boat[1]:SetVector(0,p)
+			effect.Boat[1]:SetVector(1,Vector(425,0,0))
+			effect.Boat[2] = Effect(p,"kunkka_ghostship_marker")
+			effect.Boat[2]:SetVector(0,p)
 		end
-	elseif start1 then
-		TBoat = {}		
-		start1,vec1 = nil,nil
+	elseif BoatS then
+		effect.Boat = {}		
+		BoatS,BoatV = nil,nil
 		collectgarbage("collect")
 	end
 end
 
-function Ancient(cast,team,hero,heroName)
+function AncientF(cast,team,hero,heroName)
 	local blast = FindBlast(cast,team)
 	if blast then
-		if not blastmsg then
-			blastmsg = true
+		if not BlastM then
+			BlastM = true
 			GenerateSideMessage(heroName,"ancient_apparition_ice_blast")
 		end		
-	elseif blastmsg then
-		blastmsg = false
+	elseif BlastM then
+		BlastM = false
 	end
 	local cold = FindByModifierS(hero,"modifier_cold_feet",team)
 	if cold then
-		if not TCold then
+		if not effect.Cold then
 			local vpos = Vector(cold.position.x,cold.position.y,cold.position.z)
-			TCold = Effect(vpos,"range_display")
-			TCold:SetVector(0,vpos)
-			TCold:SetVector(1,Vector(740,0,0))
+			effect.Cold = Effect(vpos,"range_display")
+			effect.Cold:SetVector(0,vpos)
+			effect.Cold:SetVector(1,Vector(740,0,0))
 		end
-	elseif TCold then
-		TCold = nil
+	elseif effect.Cold then
+		effect.Cold = nil
 		collectgarbage("collect")
 	end	
 end
 
-function PhantomKa(v)
-	if v:DoesHaveModifier("modifier_phantom_assassin_blur_active") then				
-		local PKMinimap = MapToMinimap(v.position.x,v.position.y)
-		PKIcon.x = PKMinimap.x-10
-		PKIcon.y = PKMinimap.y-10
-		PKIcon.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/phantom_assassin")
-		PKIcon.visible = true
-	elseif PKIcon.visible then
-		PKIcon.visible = false
+function ChargeF(cast,team,status,spell,hero,heroName)
+	
+	local target = FindByModifierS(hero,"modifier_spirit_breaker_charge_of_darkness_vision",team)
+	if target then
+		local clock = client.gameTime
+		if status then ChargeS = clock end
+		if spell and spell.level ~= 0 then speed = effect.speed[spell.level] end
+		local offset = target.healthbarOffset
+		if offset == -1 then return end
+		if not effect.ChargeI1.visible then
+			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"spirit_breaker_charge_of_darkness")
+			effect.ChargeI1.entity = target
+			effect.ChargeI1.entityPosition = Vector(0,0,offset)
+			effect.ChargeI1.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
+			effect.ChargeI1.visible = true
+		end
+		local Charged = FindCharge(cast)
+		if Charged then
+			if not ChargeS then
+				ChargeS = clock
+			end
+			local distance = GetDistance2D(Charged,target)
+			local Ddistance = distance - (clock - ChargeS)*speed
+			local Minimap = MapToMinimap((Charged.position.x - target.position.x) * Ddistance / distance + target.position.x,(Charged.position.y - target.position.y) * Ddistance / distance + target.position.y)
+			effect.ChargeI2.x = Minimap.x-10
+			effect.ChargeI2.y = Minimap.y-10
+			effect.ChargeI2.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
+			effect.ChargeI2.visible = not status
+		end
+	elseif effect.ChargeI1.visible then
+		ChargeS = nil
+		effect.ChargeI1.visible = false
+		effect.ChargeI2.visible = false
+	end
+	
+end
+
+function InfestF(team,hero,heroName)
+	local target = FindByModifierI(hero,"modifier_life_stealer_infest_effect",team)
+	if target then
+		local offset = target.healthbarOffset
+		if offset == -1 then return end
+		if not effect.InfestI.visible then
+			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"life_stealer_infest")
+			effect.InfestI.entity = target
+			effect.InfestI.entityPosition = Vector(0,0,offset)
+			effect.InfestI.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
+			effect.InfestI.visible = true			
+		end
+	elseif effect.InfestI.visible then
+		effect.InfestI.visible = false
 	end
 end
 
-function Tinker(team,status,cast,tick) 
-	if SleepCheck("tinker") then
+function SnipeF(team,hero,heroName)
+	local target = FindByModifierS(hero,"modifier_sniper_assassinate",team)
+	if target then
+		local offset = target.healthbarOffset
+		if offset == -1 then return end
+		if not effect.SnipeI.visible then
+			GenerateSideMessage(target.name:gsub("npc_dota_hero_",""),"sniper_assassinate")
+			effect.SnipeI.entity = target
+			effect.SnipeI.entityPosition = Vector(0,0,offset)
+			effect.SnipeI.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..heroName)
+			effect.SnipeI.visible = true
+		end
+	elseif effect.SnipeI.visible then
+		effect.SnipeI.visible = false
+	end
+end
+
+function PhantomKaF(v)
+	if v:DoesHaveModifier("modifier_phantom_assassin_blur_active") then				
+		local Minimap = MapToMinimap(v.position.x,v.position.y)
+		effect.PAI.x = Minimap.x-10
+		effect.PAI.y = Minimap.y-10
+		effect.PAI.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/phantom_assassin")
+		effect.PAI.visible = true
+	elseif effect.PAI.visible then
+		effect.PAI.visible = false
+	end
+end
+
+function ClockF(team,status,cast,tick)	
+	if SleepCheck("ShowClock") then		
 		local march = FindMarch(cast,team)
-		if march and tinkertick == 0 then			
-			TKicon.visible = not status
-			if not TKMinimap then
-				TKpos = march.position
-				TKMinimap = MapToMinimap(march.position.x,march.position.y)
-				TKicon.x = TKMinimap.x-10
-				TKicon.y = TKMinimap.y-10
-				TKicon.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/rattletrap")
-				tinkertick = tick + 2000
-			end
-		elseif tinkertick < tick and TKMinimap then
-			TKMinimap = nil
-			tinkertick = 0
-			TKicon.visible = false
-			Sleep(13000,"tinker")
+		if march and clockTime == 0 then		
+			local Minimap = MapToMinimap(march.position.x,march.position.y)
+			effect.CWI.x = Minimap.x-10
+			effect.CWI.y = Minimap.y-10			
+			effect.CWI.textureId = drawMgr:GetTextureId("NyanUI/miniheroes/rattletrap")
+			effect.CWI.visible = not status
+			clockTime = tick + 2000
+		elseif clockTime < tick then
+			clockTime = 0
+			effect.CWI.visible = false
+			Sleep(13000,"ShowClock")
 		end			
 	end
 end
 
-function Mines(team)
-	if SleepCheck("min") then
+function MinesF(team)
+	if SleepCheck("ShowMins") then
 		local mins = entityList:GetEntities({classId=CDOTA_NPC_TechiesMines})
-		if not ExtraMinesInfo then
-			for i,v in ipairs(mins) do
-				if v.team ~= team then			
-					if v.alive then	
-						if not MS[v.handle] then
-							MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-							MS[v.handle].entity = v MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)	
-						end
-						MS[v.handle].visible = not v.visible
-					elseif 	MS[v.handle] then
-						MS[v.handle].visible = false
-						MS[v.handle] = nil
+		for i,v in ipairs(mins) do
+			if v.team ~= team then			
+				if v.alive then	
+					if not effect.MS[v.handle] then
+						effect.MS[v.handle] = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
+						effect.MS[v.handle].entity = v effect.MS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)	
 					end
+					effect.MS[v.handle].visible = not v.visible
+				elseif 	effect.MS[v.handle] then
+					effect.MS[v.handle].visible = false
+					effect.MS[v.handle] = nil
 				end
 			end
-		else
-			local clear = false
-			for i,v in ipairs(mins) do
-				if v.team ~= team then
-					if not MS[v.handle] and v.alive then
-						MS[v.handle] = {}
-						MS[v.handle].map = drawMgr:CreateRect(0,0,35,35,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-						MS[v.handle].map.entity = v MS[v.handle].map.entityPosition = Vector(0,0,v.healthbarOffset)
-						MS[v.handle].eff = Effect(v.position,"range_display")
-						MS[v.handle].eff:SetVector(1, Vector(MinesInfo[v.name],0,0))
-						MS[v.handle].eff:SetVector(0, v.position)						
-						local minimap = MapToMinimap(v.position.x,v.position.y)
-						MS[v.handle].minmap = drawMgr:CreateRect(minimap.x-10,minimap.y-10,18,18,0x000000FF,drawMgr:GetTextureId("NyanUI/other/"..v.name))
-						table.insert(tabl,v.handle)
-					elseif MS[v.handle] and not v.alive then
-						clear = true
-						MS[v.handle] = nil
-					end
-				end
-			end
-			for i,v in ipairs(tabl) do
-				if MS[v] then
-					local st = entityList:GetEntity(v)
-					if not st or not st.alive then
-						MS[v] = nil
-						table.remove(tabl, i)
-						clear = true
-					end
-				end
-			end			
-			if clear then
-				collectgarbage("collect")
-			end
-		end		
-		Sleep(250,"min")
+		end
+		Sleep(250,"ShowMins")
 	end
 end		
 
-function Trap(team)
-	if SleepCheck("trap") then
-		local mins = entityList:GetEntities({classId=293})
-		for i,v in ipairs(mins) do
+function TrapF(team)
+	if SleepCheck("ShowTrap") then
+		local traps = entityList:GetEntities({classId=294})
+		for i,v in ipairs(traps) do
 			if v.team ~= team then
-				if not TS[v.handle] then
-					TS[v.handle] = drawMgr:CreateRect(0,0,30,30,0x000000FF,drawMgr:GetTextureId("NyanUI/other/trap"))
-					TS[v.handle].entity = v TS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				if not effect.TS[v.handle] then
+					effect.TS[v.handle] = drawMgr:CreateRect(0,0,30,30,0x000000FF,drawMgr:GetTextureId("NyanUI/other/trap"))
+					effect.TS[v.handle].entity = v effect.TS[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
-				TS[v.handle].visible = not v.visible
+				effect.TS[v.handle].visible = not v.visible
 			end
 		end
-		Sleep(500,"trap")
+		Sleep(500,"ShowTrap")
 	end
 end		
 
 function Roha()
 	if SleepCheck("Roshan") then
-		local rosh = entityList:FindEntities({classId=CDOTA_Unit_Roshan})[1]
-		if stage == 1 then
+		local rosh = entityList:GetEntities({classId=CDOTA_Unit_Roshan})[1]
+		if not stage then
 			RoshanSideMessage("Respawn in","8:00-11:00")
-			stage = 2
-			sleep = math.floor(client.gameTime)		
-		elseif sleep + 300 <= math.floor(client.gameTime) and stage == 2 then
-			RoshanSideMessage("Respawn in:","3:00-6:00")
-			stage = 3
-		elseif sleep + 360 <= math.floor(client.gameTime) and stage == 3 then
-			RoshanSideMessage("Respawn in:","2:00-5:00")
-			stage = 4
-		elseif sleep + 420 <= math.floor(client.gameTime) and stage == 4 then	
-			RoshanSideMessage("Respawn in:","1:00-4:00")
-			stage = 5
-		elseif sleep + 480 <= math.floor(client.gameTime) and stage == 5 then	
-			RoshanSideMessage("Respawn in:","0:00-3:00")
-			stage = 6
-		elseif rosh and rosh.alive and stage == 6 then
 			stage = 1
+			sleep = math.floor(client.gameTime)		
+		elseif sleep + 300 <= math.floor(client.gameTime) and stage == 1 then
+			RoshanSideMessage("Respawn in:","3:00-6:00")
+			stage = 2
+		elseif sleep + 360 <= math.floor(client.gameTime) and stage == 2 then
+			RoshanSideMessage("Respawn in:","2:00-5:00")
+			stage = 3
+		elseif sleep + 420 <= math.floor(client.gameTime) and stage == 3 then	
+			RoshanSideMessage("Respawn in:","1:00-4:00")
+			stage = 4
+		elseif sleep + 480 <= math.floor(client.gameTime) and stage == 4 then	
+			RoshanSideMessage("Respawn in:","0:00-3:00")
+			stage = 5
+		elseif rosh and rosh.alive and stage == 5 then
+			stage = nil
 			RoshanSideMessage("Respawn","00:00")	
-			RoshanSideMessage("Respawn","00:00")	
-			reg = false
+			RoshanSideMessage("Respawn","00:00")
 			script:UnregisterEvent(Roha)
 		end
 		Sleep(3000,"Roshan")
@@ -580,6 +707,47 @@ function FindArrow(cast,team)
 	return nil
 end
 
+function FindStunModifier(ent)
+	for i = ent.modifierCount, 1, -1 do
+		local v = ent.modifiers[i]
+		if v.stunDebuff then
+			return math.floor(v.remainingTime*10)/10
+		end
+	end
+	return false
+end
+
+function FindHexOrSilenceModifier(ent,tab)
+	for i = ent.modifierCount, 1, -1 do
+		local v = ent.modifiers[i]
+		if v.debuff then
+			for k,l in ipairs(tab) do
+				if v.name == l then
+					return math.floor(v.remainingTime*10)/10
+				end
+			end
+		end
+	end
+	return false
+end
+
+function GetRelativePlacement(alpha,font,text)
+	local alphaR = alpha/math.pi
+	if alphaR < .25 then
+		return Vector2D(0,2*(.25 - alphaR)*font:GetTextSize(text).y)
+	elseif alphaR < .5 then
+		return Vector2D(4*(alphaR - .25)*font:GetTextSize(text).x/2,0)
+	elseif alphaR < .75 then
+		return Vector2D(2*(alphaR - .25)*font:GetTextSize(text).x,0)
+	elseif alphaR < 1.25 then
+		return Vector2D(font:GetTextSize(text).x,2*(alphaR - .75)*font:GetTextSize(text).y)
+	elseif alphaR < 1.75 then
+		return Vector2D(2*(1.75 - alphaR)*font:GetTextSize(text).x,font:GetTextSize(text).y)
+	else
+		return Vector2D(0,2*(2.25 - alphaR)*font:GetTextSize(text).y)
+	end
+end
+
 function Roshan( kill )
     if kill.name == "dota_roshan_kill" then		
 		script:RegisterEvent(EVENT_TICK,Roha)
@@ -587,25 +755,62 @@ function Roshan( kill )
     end
 end
 
-function GameClose()	
-	if reg then
-		script:UnregisterEvent(Roha)
-		stage = 1
-		reg = false
-	end	sleeeep = {}
-	effects = {} TArrow = {} TBoat = {} TS = {} 
-	speeed = 600 RC = {} ss = {} MS = {} tabl = {}
-	img = {} sleeep = {} heroes = {} illsuion = {}
-	icon.visible = false
-	PKIcon.visible = false
-	TInfest.visible = false
-	TAssis.visible = false
-	TKicon.visible = false
-	TCharge1.visible = false
-	TCharge2.visible = false
+--[[function Key(msg,code)
+	if not client.chat then
+
+		if msg == KEY_DOWN and code == 20 then
+			effect.activated = true
+		else 
+			effect.activated = false
+		end
+		
+		if effect.activated == false then
+			if code == effect.key and Herotarget then
+				entityList:GetMyPlayer().selection[1]:Attack(Herotarget)
+			elseif msg == KEY_DOWN and code == effect.key1 and Herotarget then
+				effect.activated1 = not effect.activated1
+			end
+		end
+		
+	end	
+end]]
+
+function Load()
+	if PlayingGame() then		
+		script:RegisterEvent(EVENT_TICK,Main)
+		script:RegisterEvent(EVENT_DOTA,Roshan)
+		--script:RegisterEvent(EVENT_KEY,Key)
+		script:UnregisterEvent(Load)
+	end
+end
+
+function GameClose()
+	if play then
+		script:UnregisterEvent(Roshan)
+		script:UnregisterEvent(Main)
+		--script:UnregisterEvent(Key)
+		script:RegisterEvent(EVENT_TICK,Load)
+		play = false
+	end
+	effect.fromcast = {} effect.Arrow = {}	ArrowS = nil ArrowV = nil
+	effect.Boat = {} BoatS = nil BoatV = nil effect.Cold = {} BlastM = nil
+	effect.speed = {600,650,700,750} speed = 600 ChargeS = nil
+	effect.RC = {} effect.RangeCast = {} effect.MS = {} effect.last = {}
+	clockTime = 0 stage = nil	effect.TS = {}	effect.rubick = {} 
+	for i = 1,5 do 
+		effect.rubick[i] = false
+	end	
+	effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {} effect.times = {}	
+	effect.activated = false effect.activated1 = false effect.Herostart = false	effect.HeroSleep = 0 effect.HeroIcon.visible = false effect.Line.visible = false
+	effect.ArrowI.visible = false
+	effect.PAI.visible = false
+	effect.InfestI.visible = false
+	effect.SnipeI.visible = false
+	effect.CWI.visible = false
+	effect.ChargeI1.visible = false
+	effect.ChargeI2.visible = false
 	collectgarbage("collect")
 end
 
-script:RegisterEvent(EVENT_TICK,Main)
+script:RegisterEvent(EVENT_TICK,Load)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
-script:RegisterEvent(EVENT_DOTA,Roshan)
