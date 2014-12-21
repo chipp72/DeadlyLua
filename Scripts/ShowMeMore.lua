@@ -297,37 +297,6 @@ function DirectBase(cast,team)
 	end
 end
 
-function Project(proj,tick)
-	if SleepCheck("ShowPreject") then
-		for i, v in ipairs(proj) do
-			if v.source == nil then
-				if string.sub(v.name, -11) == "base_attack" then
-					local hero = v.name:gsub("_base_attack","")
-					if not effect.project[hero] then
-						effect.project[hero] = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.project[hero].visible = false					
-						table.insert(effect.projEnemy,hero)
-					elseif effect.project[hero].visible == false then	
-						local minmap = MapToMinimap(v.position.x,v.position.y)
-						effect.project[hero].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..hero)
-						effect.project[hero].x = minmap.x-10
-						effect.project[hero].y = minmap.y-10
-						effect.project[hero].visible = true
-						effect.projSleep[hero] = tick
-					end
-				end
-			end
-		end	
-		for i,v in ipairs(effect.projEnemy) do
-			if effect.project[v].visible then
-				if tick >= effect.projSleep[v] + 1500 then
-					effect.project[v].visible = false
-				end
-			end
-		end
-		Sleep(225,"ShowPreject")
-	end	
-end
-
 function Illision(v,tick)
 	if SleepCheck("ShowIllusion") then
 		if not effect.illsuion[v.handle] then
