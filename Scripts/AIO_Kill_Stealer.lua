@@ -7,13 +7,13 @@ require("libs.SideMessage")
 
 config = ScriptConfig.new()
 config:SetParameter("Active", "Z", config.TYPE_HOTKEY)
-config:SetParameter("Combokey", "H", config.TYPE_HOTKEY)
-config:SetParameter("Auto", false)
+config:SetParameter("GlobalKey", "H", config.TYPE_HOTKEY)
+config:SetParameter("AutoGlobalSpells", false)
 config:Load()
 
 local toggleKey = config.Active
-local ComboKey = config.Combokey
-local AutoGlobal = config.Auto
+local ComboKey = config.GlobalKey
+local AutoGlobal = config.AutoGlobalSpells
 local xx = nil
 local yy = nil
 
@@ -32,8 +32,8 @@ else
 end
 
 --Stuff
-local hero = {} local heroG = {} local note = {} local reg = false local combo = false
-local activ = true local draw = true local myhero = nil
+local hero = {} local heroG = {} local note = {} local play = false local combo = false
+local activ = true local draw = true local myhero = nil local dmgg = nil
 
 --Draw function
 local shft = client.screenSize.x/1600
@@ -45,10 +45,10 @@ local dmgCalc = drawMgr:CreateText(xx*shft, yy-18*shft, 0x00000099,"Dmg",F14) dm
 function Load()
 	if PlayingGame() then
 		local me = entityList:GetMyHero()
-		if me.name and KillStealer(me) then 
+		if KillStealer(me) then 
 			script:Disable() 
 		else
-			reg = true
+			play = true
 			myhero = me.classId
 			script:RegisterEvent(EVENT_TICK,Tick)
 			script:RegisterEvent(EVENT_KEY,Key)
@@ -58,20 +58,33 @@ function Load()
 end
 
 function Tick(tick)
-	if not SleepCheck() then return end	Sleep(200)
+	if not SleepCheck() then return end	
 	local me = entityList:GetMyHero()	
 	if not me then return end
 	local ID = me.classId
 	if ID ~= myhero then GameClose() end
-	
+
+	if not dmgg then 
+		Sleep(150) 
+	else
+		Sleep(50)
+		local pl = entityList:GetMyPlayer()
+		if pl.orderId == 6 and pl.target then
+			if pl.target.health > dmgg then
+				me:Stop()		
+				me:Stop(true)
+			end
+		end
+	end
+
 	dmgCalc.visible = draw
 	rect.visible,icon.visible = activ,activ
 
 	--Kill(false,linkin block,me,ability,damage,scepter damage,range,target(1-target,2-target.position,3-non target),classId,damage type)
 	if ID == CDOTA_Unit_Hero_Abaddon then
 		Kill(true,me,1,{100, 150, 200, 250},nil,nil,1)
-	elseif ID == CDOTA_Unit_Hero_Axe then	
-		KillAxe(me,{250,350,450},{300,450,625})
+	elseif ID == CDOTA_Unit_Hero_Axe then		
+		dmgg = KillAxe(me,{250,350,450},{300,450,625})		
 	elseif ID == CDOTA_Unit_Hero_Bane then
 		Kill(true,me,2,{90, 160, 230, 300},nil,nil,1)
 	elseif ID == CDOTA_Unit_Hero_BountyHunter then
@@ -100,7 +113,7 @@ function Tick(tick)
 		Kill(true,me,4,{600, 725, 850},{725, 875, 1025},nil,1)
 	elseif ID == CDOTA_Unit_Hero_Luna then		
 		Kill(true,me,1,{75, 150, 210, 260},nil,nil,1)	
-	elseif ID ==CDOTA_Unit_Hero_NightStalker then
+	elseif ID == CDOTA_Unit_Hero_NightStalker then
 		Kill(true,me,1,{90, 160, 225, 335},nil,nil,1)
 	elseif ID == CDOTA_Unit_Hero_Oracle then
 		Kill(true,me,3,{90, 180, 270, 360},nil,nil,1)
@@ -134,7 +147,7 @@ function Tick(tick)
 		if me:GetAbility(1).state == LuaEntityAbility.STATE_READY then
 			Kill(true,me,1,{80, 160, 240, 320},nil,nil,1)
 		elseif me:GetAbility(2).state == LuaEntityAbility.STATE_READY then
-			Kill(false,me,2,{80, 160, 240, 320},nil,2500,3)
+			Kill(false,me,2,{125, 200, 275, 350},nil,2500,3)
 		else	
 			Kill(true,me,1,{80, 160, 240, 320},nil,nil,1)
 		end
@@ -147,15 +160,15 @@ function Tick(tick)
 			KillLina(true,me,4,{450,675,950},nil,nil,1)
 		end
 	elseif ID == CDOTA_Unit_Hero_Alchemist then
-		SmartKill(false,me,2,{24,35,46,57},nil,800,1,ID)
+		SmartKill(false,me,2,{24,33,42,52.5},nil,800,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Morphling then
 		SmartKill(true,me,2,{20, 40, 60, 80},nil,nil,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Visage then
 		SmartKill(true,me,2,{20,20,20,20},nil,nil,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Undying then
-		SmartKill(true,me,2,{5,10,15,20},nil,nil,1,ID)
+		SmartKill(true,me,2,{10,12,14,16},nil,nil,1,ID)
 	elseif ID == CDOTA_Unit_Hero_Riki then
-		RikiKill(true,me,4,{50,70,90},nil,4)
+		RikiKill(true,me,4,{40,70,100},nil,4)
 	--complex spells
 	--Kill(linkin block,me,ability,damage,scepter damage,range,target,classId,damage type)
 	elseif me.classId == CDOTA_Unit_Hero_AntiMage then
@@ -171,24 +184,22 @@ function Tick(tick)
 	elseif ID == CDOTA_Unit_Hero_Nyx_Assassin then
 		ComplexKill(true,me,2,{3.5,4,4.5,5},nil,nil,1,ID)	
 	elseif ID == CDOTA_Unit_Hero_Techies then
-		Kill(false,me,3,{500,650,850,1150},nil,300,1)
-		KillMines(me,6,{300,450,600},{450,600,750},2,true,ID)
+		Kill(false,me,3,{500,650,850,1150},nil,250,1)
+		KillMines(me,6,{300,450,600},{450,600,750},true,ID)
 	--[[elseif ID == CDOTA_Unit_Hero_Tusk then
 		local tkdmg = (me.dmgMin + me.dmgBonus)*3.5
 		ComplexKill(false,me,4,{tkdmg, tkdmg, tkdmg, tkdmg},nil,300,5,ID,DAMAGE_PHYS)]]
 	elseif ID == CDOTA_Unit_Hero_Obsidian_Destroyer then
 		ComplexKill(false,me,4,{8,9,10},{9,10,11},nil,2,ID)	
 	elseif ID == CDOTA_Unit_Hero_Elder_Titan then
-		ComplexKill(false,me,2,{60,100,140,180},nil,nil,2,ID)
+		ComplexKill(false,me,2,{60,90,120,150},nil,nil,2,ID)
 	elseif ID == CDOTA_Unit_Hero_Shadow_Demon then
 		ComplexKill(false,me,3,{20, 35, 60, 65},nil,nil,4,ID)
 	--prediction
 	elseif ID == CDOTA_Unit_Hero_Magnataur then
 		KillPrediction(me,1,{75, 150, 225, 300},0.3,1050)
 	elseif ID == CDOTA_Unit_Hero_Windrunner then
-		local PowerTime = me:GetAbility(2).channelTime
-		if PowerTime ~= 0 and PowerTime > 0.6 then me:Move(me.position) end
-		KillPrediction(me,2,{108, 180, 252, 334},1.2,3000)
+		KillPrediction(me,2,{120, 200, 280, 360},1.2,3000)
 	--global
 	elseif ID == CDOTA_Unit_Hero_Furion then
 		KillGlobal(me,4,{140,180,225},{155,210,275},1)
@@ -197,27 +208,26 @@ function Tick(tick)
 		ComplexKill(true,me,2,{100,175,275,350},nil,nil,1,ID)
 	--other
 	-------------------develop--------------------
-	--elseif ID == CDOTA_Unit_Hero_Invoker then
-	--	SmartSS(me)
-	--elseif ID == CDOTA_Unit_Hero_Nevermore then
-	--	SmartKoils(me)
+	elseif ID == CDOTA_Unit_Hero_Invoker then
+		SmartSS(me)
+	elseif ID == CDOTA_Unit_Hero_Nevermore then
+		SmartKoils(me)
 	end
-
+	
 end
 
 function Key(msg,code)
 	if client.chat then return end
-	if IsKeyDown(toggleKey) then
-		activ = not activ
-	elseif IsKeyDown(ComboKey) then
-		combo = not combo
-	end	
-	if IsMouseOnButton(xx,yy,24,24) then
-		if msg == LBUTTON_DOWN then
-			activ = (not activ)
+	if msg == KEY_DOWN then
+		if code == toggleKey then
+			activ = not activ
+		elseif code == ComboKey then
+			combo = not combo
 		end
-	elseif IsMouseOnButton(xx*shft, yy-18*shft,24,24) then
-		if msg == LBUTTON_DOWN then
+	elseif msg == LBUTTON_DOWN then
+		if IsMouseOnButton(xx,yy,24,24) then
+			activ = (not activ)
+		elseif IsMouseOnButton(xx*shft, yy-18*shft,24,24) then
 			draw = (not draw)
 		end
 	end
@@ -228,23 +238,25 @@ function Kill(lsblock,me,ability,damage,adamage,range,target)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	if Spell.level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = GetDmgType(Spell)
-		local Range = GetRange(Spell,range)
+		local DmgT = GetDmgType(Spell.dmgType)
+		local Range = GetRange(Spell.castRange,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS) then								
 							if target == 1 then
 								KSCastSpell(Spell,v,me,lsblock)	break
 							elseif target == 2 then
@@ -267,23 +279,25 @@ function SmartKill(lsblock,me,ability,damage,adamage,range,target,id)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	if Spell.level > 0 then
 		local Dmg = GetSmartDmg(Spell.level,me,damage,id)
-		local DmgT = GetDmgType(Spell)
-		local Range = GetRange(Spell,range)
+		local DmgT = GetDmgType(Spell.dmgType)
+		local Range = GetRange(Spell.castRange,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS) then								
 							if target == 1 then
 								KSCastSpell(Spell,v,me,lsblock)	break
 							elseif target == 2 then
@@ -307,15 +321,16 @@ function ComplexKill(lsblock,me,ability,damage,adamage,range,target,id)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	if Level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = GetDmgType(Spell)
-		local Range = GetRange(Spell,range)
+		local DmgT = GetDmgType(Spell.dmgType)
+		local Range = GetRange(Spell.castRange,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
@@ -323,8 +338,9 @@ function ComplexKill(lsblock,me,ability,damage,adamage,range,target,id)
 					local DmgS = math.floor(v:DamageTaken(DmgM,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS) then								
 							if target == 1 then
 								KSCastSpell(Spell,v,me,lsblock)	break
 							elseif target == 2 then
@@ -346,23 +362,31 @@ function KillGlobal(me,ability,damage,adamage,target,comp)
 	local Spell = me:GetAbility(ability)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	local count = {}
-	if Spell.level > 0 then
+	if Spell.level > 0 then	
+		local refresh = me:FindItem("item_refresher")
+		local refresher = refresh and refresh:CanBeCasted()
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = GetDmgType(Spell)
-		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local DmgT = GetDmgType(Spell.dmgType)
+		local CastPoint = Spell:FindCastPoint() + client.latency/1000		
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do				
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not heroG[hand] then
-					heroG[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) heroG[hand].visible = false heroG[hand].entity = v heroG[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					heroG[hand] = drawMgr:CreateText(20*shft,-58*shft, 0xFFFFFF99, "",F14) heroG[hand].visible = false heroG[hand].entity = v heroG[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
-				if v.visible and v.alive and v.health > 1 then
-					heroG[hand].visible = Drawning(draw,me)
+				if v.visible and v.alive and v.health > 0 then
+					heroG[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))	
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
-					heroG[hand].text = " "..DmgF	
-					if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
+					if refresher then
+						heroG[hand].text = "("..DmgF-DmgS..")"
+						heroG[hand].color = GetColor(DmgF-DmgS)
+					else
+						heroG[hand].text = " "..DmgF
+						heroG[hand].color = GetColor(DmgF)
+					end					
+					if DmgF < 0 and KSCanDie(v,me,Spell.manacost,DmgS) then
 						if not note[hand] then
 							note[hand] = true
 							GenerateSideMessage(v.name,Spell.name)
@@ -411,22 +435,24 @@ function KillPrediction(me,ability,damage,cast,project)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	if Spell.level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = GetDmgType(Spell)
+		local DmgT = GetDmgType(Spell.dmgType)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
-				if v.visible and v.alive and v.health > 1 then
+				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and KSCanDie(v,me,Spell.manacost,DmgS) then
 							local move = v.movespeed local pos = v.position	local distance = GetDistance2D(v,me)
 							if v.activity == LuaEntityNPC.ACTIVITY_MOVE and v:CanMove() then																		
 								local range = Vector(pos.x + move * (distance/(project * math.sqrt(1 - math.pow(move/project,2))) + cast) * math.cos(v.rotR), pos.y + move * (distance/(project * math.sqrt(1 - math.pow(move/project,2))) + cast) * math.sin(v.rotR), pos.z)
@@ -453,21 +479,28 @@ function KillAxe(me,damage,adamage)
 	if Spell.level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
 					local DmgF = math.floor(v.health - Dmg + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if me:IsMagicDmgImmune() or (NotDieFromSpell(Spell,v,me) and not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") and NotDieFromBM(v,me,Dmg)) then
-							if DmgF < 0 and GetDistance2D(me,v) < 400 then	
-								KSCastSpell(Spell,v,me,true) break
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and GetDistance2D(me,v) < 400 then
+							if me:IsMagicDmgImmune() or (NotDieFromSpell(Spell.manacost,v,me) and not v:DoesHaveModifier("modifier_nyx_assassin_spiked_carapace") and NotDieFromBM(v,me,Dmg)) then							
+								if Spell and Spell:CanBeCasted() and me:CanCast() and not v:IsLinkensProtected() then
+									local prev = SelectUnit(me)
+									entityList:GetMyPlayer():UseAbility(Spell,v)
+									SelectBack(prev)
+									return Dmg
+								end								
 							end
 						end
 					end
@@ -479,48 +512,40 @@ function KillAxe(me,damage,adamage)
 	end
 end
 
-function KillMines(me,ability,damage,adamage,target,comp,id)
+function KillMines(me,ability,damage,adamage,comp,id)
 	local Spell = me:GetAbility(ability)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	local count = {}
 	if Spell.level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = GetDmgType(Spell)
+		local DmgT = GetDmgType(Spell.dmgType)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do				
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not heroG[hand] then
-					heroG[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) heroG[hand].visible = false heroG[hand].entity = v heroG[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					heroG[hand] = drawMgr:CreateText(20*shft,-58*shft, 0xFFFFFF99, "",F14) heroG[hand].visible = false heroG[hand].entity = v heroG[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
-				if v.visible and v.alive and v.health > 1 then
-					heroG[hand].visible = Drawning(draw,me)
+				if v.visible and v.alive and v.health > 0 then
+					heroG[hand].visible = draw
 					local DmgM = ComplexGetDmg(Level,me,v,Dmg,id)					
 					local DmgS = math.floor(v:DamageTaken(DmgM,DmgT,me))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
 					heroG[hand].text = " "..DmgF	
-					if DmgF < 0 and KSCanDie(v,me,Spell,DmgS) then
+					if DmgF < 0 and KSCanDie(v,me,Spell.manacost,DmgS) then
 						if not note[hand] then
 							note[hand] = true
 							GenerateSideMessage(v.name,Spell.name)
 						end
-						if activ and not me:IsChanneling() then
+						if activ and not Channel then
 							if v.meepoIllusion == nil then
 								table.insert(count,v)
 							end
 							if AutoGlobal or combo then
-								if target == 1 then
-									KSCastSpell(Spell,v,me,true)
-									combo = false break
-								elseif target == 2 then
-									KSCastSpell(me:GetAbility(4),v.position,me,false)
-									combo = false break
-								elseif target == 3 then
-									KSCastSpell(Spell,nil,me,nil)
-									me:SafeCastAbility(Spell)
-									combo = false break
-								end
+								KSCastSpell(me:GetAbility(4),v.position,me,false)
+								combo = false break
 							end
 						end
 					elseif note[hand] then
@@ -533,13 +558,7 @@ function KillMines(me,ability,damage,adamage,target,comp,id)
 		end
 	end
 	if #count > 1 then
-		if target == 1 then
-			KSCastSpell(Spell,count[1],me,true)
-		elseif target == 2 then
-			KSCastSpell(me:GetAbility(4),count[1].position,me,nil)
-		elseif target == 3 then
-			KSCastSpell(Spell,nil,me,nil)						
-		end
+		KSCastSpell(me:GetAbility(4),count[1].position,me,nil)
 	end
 	
 end
@@ -552,27 +571,23 @@ function KillLina(lsblock,me,ability,damage,adamage,range,target)
 		local DmgT = DAMAGE_PURE
 		local Range = GetRange(Spell,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
+		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
 					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me,true))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
-					if activ and not me:IsChanneling() then
-						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS) then								
-							if target == 1 then
-								KSCastSpell(Spell,v,me,lsblock)	break
-							elseif target == 2 then
-								KSCastSpell(Spell,v.position,me,lsblock) break
-							elseif target == 3 then
-								KSCastSpell(Spell,nil,me,nil) break
-							end
+					hero[hand].color = GetColor(DmgF)
+					if activ and not Channel then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS) then
+							KSCastSpell(Spell,v,me,lsblock)	break
 						end
 					end
 				elseif hero[hand].visible then
@@ -598,7 +613,7 @@ function RikiKill(lsblock,me,ability,damage,range,target)
 			if v.healthbarOffset ~= -1 and not v:IsIllusion() then
 				local hand = v.handle
 				if not hero[hand] then
-					hero[hand] = drawMgr:CreateText(20,0-45, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
+					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
 				if v.visible and v.alive and v.health > 0 then
 					hero[hand].visible = draw
@@ -606,8 +621,9 @@ function RikiKill(lsblock,me,ability,damage,range,target)
 					local DmgS = math.floor(v:DamageTaken(Dmg2,DAMAGE_PHYS,me))
 					local DmgF = math.floor(v.health - DmgS - DmgM + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
+					hero[hand].color = GetColor(DmgF)
 					if me.activity ~= 424 and activ and not me:IsChanneling() and me:CanAttack() then
-						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell,DmgS+DmgM) then
+						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS+DmgM) then
 							KSCastSpell(Spell,v,me,lsblock) Sleep(1200,"riki") break
 						end
 					end
@@ -618,6 +634,158 @@ function RikiKill(lsblock,me,ability,damage,range,target)
 		end
 	end
 end
+
+function SmartKoils(me)
+	local Spell = me:GetAbility(3)
+	local Spell2 = me:GetAbility(2)
+	local Spell3 = me:GetAbility(1)
+	local Dmg = {75,150,225,300}
+	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
+	if Spell.level > 0 then
+		local DmgS = Dmg[Spell.level]
+		local Phase = Spell.abilityPhase and Spell2.abilityPhase and Spell3.abilityPhase
+		--local DmgS2 = Dmg[Spell.level]*2
+		--local DmgS3 = Dmg[Spell.level]*3
+		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = me:GetEnemyTeam(),illusion=false})			
+		for i,v in ipairs(enemies) do
+			if v.healthbarOffset ~= -1 then
+				if not hero[v.handle] then
+					hero[v.handle] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				end
+				if v.visible and v.alive and v.health > 0 then
+					hero[v.handle].visible = draw
+					local DmgF = math.floor(v.health - v:DamageTaken(DmgS,DAMAGE_MAGC,me))
+					hero[v.handle].text = " "..DmgF
+					hero[v.handle].color = GetColor(DmgF)
+					if activ and not me:IsChanneling() then
+						if DmgF < 0 and GetDistance2D(me,v) < 1000 and KSCanDie(v,me,Spell.manacost,DmgS) and not Phase then
+							local distance = GetDistance2D(me,SFrange(v,me))
+							if distance < 900 and distance > 550 then
+								KSCastSpellSF(Spell,v,me) break
+							elseif distance < 550 and distance > 270 then
+								KSCastSpellSF(Spell2,v,me) break
+							elseif distance < 300 then	
+								KSCastSpellSF(Spell3,v,me) break
+							end
+						end
+					end
+				else
+					hero[v.handle].visible = false
+				end
+			end
+		end
+	end
+end
+
+function SFrange(ent,me)
+	if ent.activity == LuaEntityNPC.ACTIVITY_MOVE and ent:CanMove() then
+		local turn = TurnRate(ent.position,me)/1000
+		return Vector(ent.position.x + ent.movespeed * (0.67+turn) * math.cos(ent.rotR), ent.position.y + ent.movespeed* (0.67+turn) * math.sin(ent.rotR), ent.position.z)
+	else
+		return ent.position
+	end
+end
+
+function TurnRate(pos,me)
+	local angel = ((((math.atan2(pos.y-me.position.y,pos.x-me.position.x) - me.rotR + math.pi) % (2 * math.pi)) - math.pi) % (2 * math.pi)) * 180 / math.pi
+	if angel > 180 then 
+		return ((360 - angel)/2)
+	else
+		return (angel/2)
+	end
+end
+
+function SmartSS(me)
+	local Spell = me:FindSpell("invoker_sun_strike")
+	local Exort = me:GetAbility(3)
+	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
+	if Exort.level > 0 then
+		local SSDmg = {100,162,225,287,350,412,475}
+		local Dmg = SSDmg[Exort.level]
+		local CastPoint = 1.7 + client.latency/1000
+		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team,illusion=false})			
+		for i,v in ipairs(enemies) do
+			if v.healthbarOffset ~= -1 then
+				if not hero[v.handle] then
+					hero[v.handle] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[v.handle].visible = false hero[v.handle].entity = v hero[v.handle].entityPosition = Vector(0,0,v.healthbarOffset)
+				end
+				if v.visible and v.alive and v.health > 0 then					
+					hero[v.handle].visible = draw
+					local DmgS = math.floor(v:DamageTaken(Dmg,DAMAGE_PURE,me))
+					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen + MorphMustDie(v,CastPoint))
+					hero[v.handle].text = " "..DmgF	
+					hero[v.handle].color = GetColor(DmgF)
+					if DmgF < 0 and KSCanDie(v,me,175,DmgS) then
+						if not note[v.handle] then
+							note[v.handle] = true
+							GenerateSideMessage(v.name,Spell.name)
+						end
+						if activ and (AutoGlobal or combo) then
+							if v:IsStunned() then
+								local stun = FindStunModifier(v)
+								if stun and stun > 1.7 then
+									if NearCount(v,DmgF,Dmg,enemies,me.team) then
+										KSCastSpell(Spell,Vector(v.position.x,v.position.y,v.position.z),me,nil) break
+									end
+								end
+							elseif v.activity == LuaEntityNPC.ACTIVITY_MOVE and v:CanMove() then	
+								if NearCount(v,DmgF,Dmg,enemies,me.team) then
+									KSCastSpell(Spell,Vector(v.position.x + v.movespeed * 1.75 * math.cos(v.rotR), v.position.y + v.movespeed* 1.75 * math.sin(v.rotR), v.position.z),me,nil) break
+								end
+							else
+								if NearCount(v,DmgF,Dmg,enemies,me.team) then	
+									KSCastSpell(Spell,Vector(v.position.x + v.movespeed * 0.05 * math.cos(v.rotR), v.position.y + v.movespeed* 0.05 * math.sin(v.rotR), v.position.z),me,nil) break
+								end
+							end
+							combo = false							
+						end
+					else
+						note[v.handle] = nil
+					end
+				else
+					hero[v.handle].visible = false
+				end
+			end
+		end		
+	end
+end
+
+function NearCount(v,DmgF,Dmg,table,teams)
+	local count = 0
+	for z,x in ipairs(table) do
+		if v.alive and v.visible then
+			if GetDistance2D(x,v) < 175 then
+				count = count + 1
+			end
+		end
+	end
+	for z,x in ipairs(entityList:GetEntities({classId=CDOTA_BaseNPC_Creep_Lane,team=5-teams,alive=true})) do
+		if GetDistance2D(x,v) < 175 then
+			count = count + 1
+		end
+	end
+	if count == 1 or DmgF + Dmg*(count-2)/(count-1) < 0 then
+		return true
+	end
+	return false
+end
+
+function FindStunModifier(ent)
+	for i = ent.modifierCount, 1, -1 do
+		local v = ent.modifiers[i]
+		if v.stunDebuff then
+			return math.floor(v.remainingTime*10)/10
+		end
+	end
+	return false
+end
+
+function GetColor(c)
+	if c < 0 then
+		return 0x99FFFF99
+	end
+	return 0xFFFFFF99
+end	
 
 function GetDmg(lvl,me,tab1,tab2)
 	local baseDmg = tab1[lvl]
@@ -659,10 +827,11 @@ function GetSmartDmg(lvl,me,tab1,id)
 	elseif id == CDOTA_Unit_Hero_Undying then
 		local count = entityList:GetEntities(function (v) return ((v.type == LuaEntity.TYPE_CREEP and v.classId ~= 292 and not v.ancient) or v.classId == CDOTA_Unit_Undying_Zombie or v.classId == CDOTA_Unit_SpiritBear or v.classId == CDOTA_Unit_Broodmother_Spiderling or v.classId == CDOTA_Unit_Hero_Beastmaster_Boar or v.classId == CDOTA_Unit_Hero_Beastmaster_Hawk or v.classId == CDOTA_BaseNPC_Invoker_Forged_Spirit or v.courier or v.hero) and v.alive and v.visible and v.health > 0 and GetDistance2D(v,me) < 1300 end)
 		local num = #count-2
+		local bonus = {18,22,26,30}
 		if num < baseDmg then
-			return num * 24
+			return num * bonus[lvl]
 		else
-			return baseDmg*24
+			return baseDmg * bonus[lvl]
 		end
 	end
 end
@@ -730,7 +899,7 @@ function ComplexGetDmg(lvl,me,ent,damage,id)
 	elseif id == CDOTA_Unit_Hero_Legion_Commander then
 		local bonusCreep = {14,16,18,20}
 		local bonusHero = {20,35,50,65}
-		local heroDmg = #entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.alive and v.team ~= me.team and v.health > 0 and v.visible and GetDistance2D(ent,v) < 330 end)*bonusHero[lvl]
+		local heroDmg = #entityList:GetEntities(function (v) return v.type == LuaEntity.TYPE_HERO and v.alive and v.team ~= me.team and v.visible and v.health > 0 and GetDistance2D(ent,v) < 330 end)*bonusHero[lvl]
 		local creepDmg = #entityList:GetEntities(function (v) return ((v.type == LuaEntity.TYPE_CREEP and v.classId ~= 292 and not v.ancient) or v.classId == CDOTA_Unit_VisageFamiliar or v.classId == CDOTA_Unit_Undying_Zombie or v.classId == CDOTA_Unit_SpiritBear or v.classId == CDOTA_Unit_Broodmother_Spiderling or v.classId == CDOTA_Unit_Hero_Beastmaster_Boar or v.classId == CDOTA_Unit_Hero_Beastmaster_Hawk or v.classId == CDOTA_BaseNPC_Invoker_Forged_Spirit) and v.team ~= me.team and v.alive and v.visible and v.health > 0 and GetDistance2D(ent,v) < 350 end)*bonusCreep[lvl]
 		return  math.floor(damage + heroDmg + creepDmg)
 	elseif id == CDOTA_Unit_Hero_Zuus then	
@@ -750,17 +919,16 @@ function GetRange(skill,range)
 	if range then
 		return range
 	end
-	return skill.castRange + 50
+	return skill + 50
 end
 
 function GetDmgType(skill)
-	local typ = skill.dmgType
-	if typ == LuaEntityAbility.DAMAGE_TYPE_MAGICAL then
+	if skill == LuaEntityAbility.DAMAGE_TYPE_MAGICAL then
 		return DAMAGE_MAGC	
-	elseif typ == LuaEntityAbility.DAMAGE_TYPE_PHYSICAL then
-		return DAMAGE_PHYS
-	elseif typ == LuaEntityAbility.DAMAGE_TYPE_PURE then
+	elseif skill == LuaEntityAbility.DAMAGE_TYPE_PURE then
 		return DAMAGE_PURE
+	elseif skill == LuaEntityAbility.DAMAGE_TYPE_PHYSICAL then
+		return DAMAGE_PHYS
 	end
 end		
 
@@ -789,6 +957,15 @@ function KSCastSpell(spell,target,me,lsblock)
 	end
 end
 
+function KSCastSpellSF(spell,target,me)
+	if spell and spell:CanBeCasted() and me:CanCast() then
+		local prev = SelectUnit(me)
+		entityList:GetMyPlayer():Attack(target)
+		entityList:GetMyPlayer():UseAbility(spell)
+		SelectBack(prev)
+	end
+end
+
 function KSCanDie(hero,me,skill,dmgs)
 	if hero:CanDie() then
 		if me:IsMagicDmgImmune() then
@@ -802,7 +979,7 @@ end
 
 function NotDieFromSpell(skill,hero,me)
 	if me:DoesHaveModifier("modifier_pugna_nether_ward_aura") then
-		if me.health < me:DamageTaken((skill.manacost*1.75), DAMAGE_MAGC, hero) then
+		if me.health < me:DamageTaken((skill*1.75), DAMAGE_MAGC, hero) then
 			return false
 		end		
 	end
@@ -833,15 +1010,8 @@ end
 
 function KillStealer(hero)
 	local hId = hero.classId
-	if hId == CDOTA_Unit_Hero_AncientApparition or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_FacelessVoid or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren then 
+	if hId == CDOTA_Unit_Hero_AncientApparition or hId == CDOTA_Unit_Hero_Batrider or hId == CDOTA_Unit_Hero_Razor or hId == CDOTA_Unit_Hero_Beastmaster or hId == CDOTA_Unit_Hero_Brewmaster or hId == CDOTA_Unit_Hero_Bristleback or hId == CDOTA_Unit_Hero_ChaosKnight or hId == CDOTA_Unit_Hero_Clinkz or hId == CDOTA_Unit_Hero_DarkSeer or hId == CDOTA_Unit_Hero_Dazzle or hId == CDOTA_Unit_Hero_Disruptor or hId == CDOTA_Unit_Hero_DrowRanger or hId == CDOTA_Unit_Hero_EmberSpirit or hId == CDOTA_Unit_Hero_Enchantress or hId == CDOTA_Unit_Hero_Enigma or hId == CDOTA_Unit_Hero_Gyrocopter or hId == CDOTA_Unit_Hero_Huskar or hId == CDOTA_Unit_Hero_Jakiro or hId == CDOTA_Unit_Hero_Juggernaut or hId == CDOTA_Unit_Hero_KeeperOfTheLight or hId == CDOTA_Unit_Hero_Kunkka or hId == CDOTA_Unit_Hero_LoneDruid or hId == CDOTA_Unit_Hero_Lycan or hId == CDOTA_Unit_Hero_Medusa or hId == CDOTA_Unit_Hero_Meepo or hId == CDOTA_Unit_Hero_Phoenix or hId == CDOTA_Unit_Hero_Pudge or hId == CDOTA_Unit_Hero_Pugna or hId == CDOTA_Unit_Hero_SandKing or hId == CDOTA_Unit_Hero_Silencer or hId == CDOTA_Unit_Hero_Skywrath_Mage or hId == CDOTA_Unit_Hero_Slardar or hId == CDOTA_Unit_Hero_Slark or hId == CDOTA_Unit_Hero_SpiritBreaker or hId == CDOTA_Unit_Hero_StormSpirit or hId == CDOTA_Unit_Hero_TemplarAssassin or hId == CDOTA_Unit_Hero_Terrorblade or hId == CDOTA_Unit_Hero_Tiny or hId == CDOTA_Unit_Hero_Treant or hId == CDOTA_Unit_Hero_TrollWarlord or hId == CDOTA_Unit_Hero_Ursa or hId == CDOTA_Unit_Hero_Venomancer or hId == CDOTA_Unit_Hero_Viper or hId == CDOTA_Unit_Hero_Warlock or hId == CDOTA_Unit_Hero_Weaver or hId == CDOTA_Unit_Hero_Wisp or hId == CDOTA_Unit_Hero_WitchDoctor or hId == CDOTA_Unit_Hero_AbyssalUnderlord or hId == CDOTA_Unit_Hero_Omniknight or hId == CDOTA_Unit_Hero_Ogre_Magi or hId == CDOTA_Unit_Hero_Naga_Siren or hId == CDOTA_Unit_Hero_Bloodseeker or hId == CDOTA_Unit_Hero_Tusk or hId == CDOTA_Unit_Hero_FacelessVoid then 
 		return true
-	end
-	return false
-end
-
-function Drawning(draw,me)
-	if me.classId ~= CDOTA_Unit_Hero_Zuus and me.classId ~= CDOTA_Unit_Hero_Techies then
-		return draw
 	end
 	return false
 end
@@ -854,11 +1024,11 @@ function GameClose()
 	myhero = nil
 	combo = false
 	collectgarbage("collect")
-	if reg then
+	if play then
 		script:UnregisterEvent(Tick)
 		script:UnregisterEvent(Key)
 		script:RegisterEvent(EVENT_TICK,Load)
-		reg = false
+		play = false
 	end
 end
 
