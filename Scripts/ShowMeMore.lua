@@ -301,14 +301,14 @@ function Illision(v,tick)
 	if SleepCheck("ShowIllusion") then
 		if not effect.illsuion[v.handle] then
 			effect.illsuion[v.handle] = drawMgr:CreateRect(0,0,18,18,0x000000ff)
-			effect.illSleep[v.handle] = tick + 1500
+			effect.illSleep[v.handle] = tick + 1000
 			local Minimap = MapToMinimap(v.position.x,v.position.y)
 			effect.illsuion[v.handle].x = Minimap.x-10
 			effect.illsuion[v.handle].y = Minimap.y-10
 			effect.illsuion[v.handle].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))
 		end
 		effect.illsuion[v.handle].visible = (not v.visible and effect.illSleep[v.handle] >= tick)
-		Sleep(500,"ShowIllusion")
+		Sleep(250,"ShowIllusion")
 	end
 end
 
@@ -760,25 +760,25 @@ function GameClose()
 		--script:UnregisterEvent(Key)
 		script:RegisterEvent(EVENT_TICK,Load)
 		play = false
+		effect.fromcast = {} effect.Arrow = {}	ArrowS = nil ArrowV = nil
+		effect.Boat = {} BoatS = nil BoatV = nil effect.Cold = {} BlastM = nil
+		effect.speed = {600,650,700,750} speed = 600 ChargeS = nil
+		effect.RC = {} effect.RangeCast = {} effect.MS = {} effect.last = {}
+		clockTime = 0 stage = nil	effect.TS = {}	effect.rubick = {} 
+		for i = 1,5 do 
+			effect.rubick[i] = false
+		end	
+		effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {} effect.times = {}	
+		effect.activated = false effect.activated1 = false effect.Herostart = false	effect.HeroSleep = 0 effect.HeroIcon.visible = false effect.Line.visible = false
+		effect.ArrowI.visible = false
+		effect.PAI.visible = false
+		effect.InfestI.visible = false
+		effect.SnipeI.visible = false
+		effect.CWI.visible = false
+		effect.ChargeI1.visible = false
+		effect.ChargeI2.visible = false
+		collectgarbage("collect")
 	end
-	effect.fromcast = {} effect.Arrow = {}	ArrowS = nil ArrowV = nil
-	effect.Boat = {} BoatS = nil BoatV = nil effect.Cold = {} BlastM = nil
-	effect.speed = {600,650,700,750} speed = 600 ChargeS = nil
-	effect.RC = {} effect.RangeCast = {} effect.MS = {} effect.last = {}
-	clockTime = 0 stage = nil	effect.TS = {}	effect.rubick = {} 
-	for i = 1,5 do 
-		effect.rubick[i] = false
-	end	
-	effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {} effect.times = {}	
-	effect.activated = false effect.activated1 = false effect.Herostart = false	effect.HeroSleep = 0 effect.HeroIcon.visible = false effect.Line.visible = false
-	effect.ArrowI.visible = false
-	effect.PAI.visible = false
-	effect.InfestI.visible = false
-	effect.SnipeI.visible = false
-	effect.CWI.visible = false
-	effect.ChargeI1.visible = false
-	effect.ChargeI2.visible = false
-	collectgarbage("collect")
 end
 
 script:RegisterEvent(EVENT_TICK,Load)
