@@ -603,7 +603,7 @@ function RikiKill(lsblock,me,ability,damage,range,target)
 		local Dmg1 = damage[Spell.level]
 		local bs = {0.5,0.75,1,1.25}
 		local Dmg2 = bs[E_.level]*me.agilityTotal+me.dmgMin+me.dmgBonus
-		local Range = GetRange(Spell,range)
+		local Range = GetRange(Spell.castRange,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
 		for i,v in ipairs(enemies) do
