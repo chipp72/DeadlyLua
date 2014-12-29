@@ -566,8 +566,7 @@ function KillLina(lsblock,me,ability,damage,adamage,range,target)
 	icon.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..Spell.name)
 	if Spell.level > 0 then
 		local Dmg = GetDmg(Spell.level,me,damage,adamage)
-		local DmgT = DAMAGE_PURE
-		local Range = GetRange(Spell,range)
+		local Range = GetRange(Spell.castRange,range)
 		local CastPoint = Spell:FindCastPoint() + client.latency/1000
 		local Channel = me:IsChanneling()
 		local enemies = entityList:GetEntities({type=LuaEntity.TYPE_HERO,team = 5-me.team})
@@ -577,13 +576,13 @@ function KillLina(lsblock,me,ability,damage,adamage,range,target)
 				if not hero[hand] then
 					hero[hand] = drawMgr:CreateText(20*shft,-45*shft, 0xFFFFFF99, "",F14) hero[hand].visible = false hero[hand].entity = v hero[hand].entityPosition = Vector(0,0,v.healthbarOffset)
 				end
-				if v.visible and v.alive and v.health > 0 then
+				if v.visible and v.alive then
 					hero[hand].visible = draw
-					local DmgS = math.floor(v:DamageTaken(Dmg,DmgT,me,true))
+					local DmgS = math.floor(v:DamageTaken(Dmg,DAMAGE_PURE,me,true))
 					local DmgF = math.floor(v.health - DmgS + CastPoint*v.healthRegen+MorphMustDie(v,CastPoint))
 					hero[hand].text = " "..DmgF
 					hero[hand].color = GetColor(DmgF)
-					if activ and not Channel then
+					if activ then
 						if DmgF < 0 and GetDistance2D(me,v) < Range and KSCanDie(v,me,Spell.manacost,DmgS) then
 							KSCastSpell(Spell,v,me,lsblock)	break
 						end
