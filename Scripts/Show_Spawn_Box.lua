@@ -4,9 +4,11 @@ require("libs.ScriptConfig")
 
 local config = ScriptConfig.new()
 config:SetParameter("Hotkey", "L", config.TYPE_HOTKEY)
+config:SetParameter("AnotherEffect", false)
 config:Load()
 
 local toggleKey = config.Hotkey
+local effect = config.AnotherEffect
 
 local check = false
 local play = false
@@ -37,8 +39,12 @@ local eff4 = {}
 
 local effec = "candle_flame_medium" -- ambient_gizmo_model
 
---[[
+if effect then
+	effec = "ambient_gizmo_model"
+end
 
+
+--[[
 	a----b
 	|	 |
 	|	 |
@@ -46,7 +52,6 @@ local effec = "candle_flame_medium" -- ambient_gizmo_model
 	
 	a 2240;-4288
 	c 3776;-5312
-
 ]]
 
 function Key(msg,code)
@@ -135,6 +140,7 @@ function GameClose()
 	eff2 = {}
 	eff3 = {}
 	eff4 = {}
+	check = false
 	collectgarbage("collect")
 	if play then
 		script:UnregisterEvent(Key)
