@@ -36,7 +36,7 @@ function Tick(tick)
 	if not global then global = true
 	
 		for a,spell in ipairs(me.abilities) do
-			if spell.name ~= "attribute_bonus" and not spell.hidden  then
+			if spell.name ~= "attribute_bonus" and not spell.hidden then
 				table.insert(spellList,spell)
 			end
 		end
@@ -90,7 +90,6 @@ function Tick(tick)
 							spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
 						end
 					end
-					print(spells[a].range,a)
 					if not spells[a].range or type(spells[a].range) ~= "number" then return end					
 					if not spells[a].effect or spells[a].ranges ~= spells[a].range then
 						spells[a].effect = Effect(me,"range_display")
@@ -208,3 +207,4 @@ end
 
 script:RegisterEvent(EVENT_TICK,Load)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
+
