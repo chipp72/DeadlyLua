@@ -36,7 +36,7 @@ function Tick(tick)
 	if not global then global = true
 	
 		for a,spell in ipairs(me.abilities) do
-			if spell.name ~= "attribute_bonus" and not spell.hidden and spell.name ~= me:GetAbility(5).name and spell.name ~= me:GetAbility(6).name then
+			if spell.name ~= "attribute_bonus" and not spell.hidden  then
 				table.insert(spellList,spell)
 			end
 		end
