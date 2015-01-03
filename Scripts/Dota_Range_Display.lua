@@ -1,15 +1,15 @@
---<<Shows ability range>>
-
 require("libs.ScriptConfig")
+require("libs.Utils")
 
 local config = ScriptConfig.new()
-config:SetParameter("Hotkey", "56", config.TYPE_HOTKEY)
+config:SetParameter("ShowAbilityPanel", "56", config.TYPE_HOTKEY)
+config:SetParameter("SingleHotKey", "O", config.TYPE_HOTKEY)
+config:SetParameter("Range", 1200)
 config:Load()
 
-local sleep = 0
-local spel = false
-local toggleKey = config.Hotkey
-local activated,move = false,false
+--ability
+local toggleKey = config.ShowAbilityPanel
+local activated1,move = false,false
 local xx,yy = 180,80
 local spellList = {}
 local spells = {}
@@ -17,29 +17,45 @@ local global = nil
 local text = drawMgr:CreateText(0,0,0xFFFFFFff,"Range Display",drawMgr:CreateFont("manabarsFont","Arial",14,500))
 text.visible = false
 
+--single
+local rangeSingle = config:GetParameter("Range")
+local keySingle = config.SingleHotKey
+local activated2 = false
+local effectSingle = nil
+
 function Tick(tick)
 
-	if not client.connected or client.loading or client.console or tick < sleep then return end
-	
-	sleep = tick + 250
+	if client.console or not SleepCheck() then return end
+
+	Sleep(250)
 
 	local me = entityList:GetMyHero()
 
 	if not me then return end
+
+	if not global then global = true
 	
-	if not spel then spel = true
 		for a,spell in ipairs(me.abilities) do
-			if spell.name ~= "attribute_bonus" and not spell.hidden then
+			if spell.name ~= "attribute_bonus" and not spell.hidden and spell.name ~= me:GetAbility(5).name and spell.name ~= me:GetAbility(6).name then
 				table.insert(spellList,spell)
 			end
 		end
 		
+		for a,v in ipairs(spellList) do
+			if not spells[a] then spells[a] = {} end
+			if not spells[a].img then
+				spells[a].img = drawMgr:CreateRect(0,0,32,32,0x000000FF) spells[a].img.visible = false
+				spells[a].rect = drawMgr:CreateRect(0,0,36,36,0xFFFFFFff,true) spells[a].rect.visible = false
+				spells[a].img.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..v.name)
+			end
+		end
+		
 	else
-	
+
 		global = #spellList
 		local count = #spellList
-		
-		if activated then
+
+		if activated1 then
 			if xx == 180 and yy == 80 then LoadGUIConfig() end
 			if xx == nil and yy == nil then xx=180 yy = 80 end
 			if move == true then
@@ -47,12 +63,6 @@ function Tick(tick)
 			end
 			text.x,text.y,text.visible = xx + 39*count/2,yy-18,true		
 			for a,v in ipairs(spellList) do
-				if not spells[a] then spells[a] = {} end
-				if not spells[a].img then
-					spells[a].img = drawMgr:CreateRect(0,0,32,32,0x000000FF) spells[a].img.visible = false
-					spells[a].rect = drawMgr:CreateRect(0,0,36,36,0xFFFFFFff,true) spells[a].rect.visible = false
-					spells[a].img.textureId = drawMgr:GetTextureId("NyanUI/spellicons/"..v.name)
-				end
 				spells[a].img.x,spells[a].img.y = xx+38*a,yy
 				spells[a].rect.x,spells[a].rect.y = xx+38*a-2,yy - 2
 				if spells[a].state then					
@@ -63,43 +73,42 @@ function Tick(tick)
 				spells[a].img.visible,spells[a].rect.visible = true,true
 			end
 		elseif text.visible then
-			for a,v in ipairs(spellList) do
+			for a = 1, #spellList do
 				spells[a].img.visible,spells[a].rect.visible = false,false		
 			end
 			text.visible = false
 		end
-		
-		if #spells~=0 then
-			local dirty = false
-			for a,v in ipairs(spellList) do
-				if v.level ~= 0 then
-					if spells[a].state then
-						spells[a].range = v.castRange
-						if (not spells[a].range or spells[a].range == 0) and v.specialCount > 1 then
-							spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
-							if spells[a].range < 100  then
-								spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
-							end
+
+		local dirty = false
+		for a,v in ipairs(spellList) do
+			if v.level ~= 0 then
+				if spells[a].state then
+					spells[a].range = v.castRange
+					if (not spells[a].range or spells[a].range == 0) and v.specialCount > 1 then
+						spells[a].range = v:GetSpecial(1):GetData(math.min(v.specials[1].dataCount,v.level))
+						if spells[a].range < 100 then
+							spells[a].range = v:GetSpecial(2):GetData(math.min(v.specials[2].dataCount,v.level))
 						end
-						if not spells[a].range or type(spells[a].range) ~= "number" then return end					
-						if not spells[a].effect or spells[a].ranges ~= spells[a].range then
-							spells[a].effect = Effect(me,"range_display")
-							spells[a].effect:SetVector( 1,Vector(spells[a].range,0,0) )
-							spells[a].ranges = spells[a].range
-							dirty = true
-						end						
-					elseif spells[a].effect then
-						spells[a].effect = nil
+					end
+					print(spells[a].range,a)
+					if not spells[a].range or type(spells[a].range) ~= "number" then return end					
+					if not spells[a].effect or spells[a].ranges ~= spells[a].range then
+						spells[a].effect = Effect(me,"range_display")
+						spells[a].effect:SetVector( 1,Vector(spells[a].range,0,0) )
+						spells[a].ranges = spells[a].range
 						dirty = true
-					end				
+					end						
+				elseif spells[a].effect then
+					spells[a].effect = nil
+					dirty = true
 				end
 			end
-			if dirty then
-				collectgarbage("collect")
-			end
-		end		
+		end
+		if dirty then
+			collectgarbage("collect")
+		end
 	end
-	
+
 end
 
 function Key(msg,code)
@@ -108,11 +117,23 @@ function Key(msg,code)
 
 	if not count or client.chat then return end
 
-	if msg == KEY_DOWN and code == toggleKey then
-		activated = not activated
+	if msg == KEY_DOWN then
+		if code == toggleKey then
+			activated1 = not activated1
+		elseif code == keySingle then
+			 local me = entityList:GetMyHero()
+			 activated2 = not activated2
+			 if activated2 then
+				-- add effect
+				effectSingle = Effect(me,"range_display")
+				effectSingle:SetVector(1,Vector(rangeSingle,0,0))
+			else
+				RemoveEffect()
+			end  
+		end
 	end
-
-	if activated then
+	
+	if activated1 then
 		if msg == LBUTTON_UP then
 			if IsMouseOnButton(xx+39*count/2,yy-20,20,100) then
 				move = (not move)
@@ -127,6 +148,12 @@ function Key(msg,code)
 		end
 	end
 
+end
+
+function RemoveEffect()
+	effectSingle = nil
+	collectgarbage("collect")
+	activated2 = false
 end
 
 function IsMouseOnButton(x,y,h,w)
@@ -157,8 +184,8 @@ function Load()
 		text.visible = false
 		spellList,spells = {},{}
 		global,count = nil,nil
-		activated,move,spel = false,false,false
-		collectgarbage("collect")
+		activated1,move = false,false,false
+		RemoveEffect()
 		script:RegisterEvent(EVENT_TICK,Tick)
 		script:RegisterEvent(EVENT_KEY,Key)
 		script:UnregisterEvent(Load)
@@ -175,10 +202,9 @@ function GameClose()
 	text.visible = false
 	spellList,spells = {},{}
 	global,count = nil,nil
-	activated,move,spel = false,false,false
-	collectgarbage("collect")
+	activated1,move = false,false
+	RemoveEffect()
 end
 
 script:RegisterEvent(EVENT_TICK,Load)
 script:RegisterEvent(EVENT_CLOSE,GameClose)
-
