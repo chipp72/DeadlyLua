@@ -29,6 +29,7 @@ function Tick(tick)
 	Sleep(250)
 
 	local me = entityList:GetMyHero()
+	if not me then return end
 	local ability = me.abilities
 	local spellList = {}
 	
