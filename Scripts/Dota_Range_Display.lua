@@ -174,7 +174,7 @@ function Load()
 		play = true
 		text.visible = false
 		spells = {}
-		activated1,move = false,false,false
+		activated1,move = false,false
 		RemoveEffect()
 		script:RegisterEvent(EVENT_TICK,Tick)
 		script:RegisterEvent(EVENT_KEY,Key)
