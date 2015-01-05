@@ -54,22 +54,6 @@ effect.ChargeI2 = drawMgr:CreateRect(0,0,18,18,0xFF8AB160) effect.ChargeI2.visib
 effect.HeroIcon = drawMgr:CreateRect(0,0,16,16,0xffffffff) effect.HeroIcon.visible = false
 effect.Line = drawMgr:CreateLine(0,0,0,0,0xffffffff) effect.Line.visible = false
 
---ShowHero
-effect.key = string.byte("G")
-effect.key1 = string.byte("I")
-
-effect.activated = false
-effect.activated1 = false
-effect.Herostart = false
-effect.HeroSleep = 0
-effect.HeroIcon = drawMgr:CreateRect(0,0,16,16,0xffffffff) effect.HeroIcon.visible = false
-effect.Line = drawMgr:CreateLine(0,0,0,0,0xffffffff) effect.Line.visible = false
-
-effect.smallFont = drawMgr:CreateFont("defaultFont","Arial",25,1000)
-effect.bigFont = drawMgr:CreateFont("defaultFont","Arial",40,1000)
-effect.whilesize = 180*(math.floor(client.screenSize.x/160))/10
-local Herotarget = nil
-
 effect.spells = {
 -- modifier name, effect name, second effect, aoe-range
 {"modifier_invoker_sun_strike", "invoker_sun_strike_team","invoker_sun_strike_ring_b",175},
@@ -82,26 +66,6 @@ effect.HexList = {"modifier_sheepstick_debuff","modifier_lion_voodoo","modifier_
 effect.SilenceList = {"modifier_skywrath_mage_ancient_seal","modifier_earth_spirit_boulder_smash_silence","modifier_orchid_malevolence_debuff","modifier_night_stalker_crippling_fear",
 "modifier_silence","modifier_silencer_last_word_disarm","modifier_silencer_global_silence","modifier_doom_bringer_doom","modifier_legion_commander_duel"}
 
-effect.List = {
---hero with table
-npc_dota_hero_pudge =
-{
-Spell = 1,
-Start = {1374,1274,1174,1074},
-End = {1280,1170,1060,950},
-Count = 10,
-Range = {100,110,120,130},
-},
-npc_dota_hero_windrunner =
-{
-Spell = 2,
-Start = {874,874,874,874},
-End = {710,710,710,710},
-Count = 15,
-Range = {180,180,180,180},
-}
-}
-
 function Main(tick)
 
 	if client.console or not SleepCheck() then return end
@@ -109,6 +73,7 @@ function Main(tick)
 	local cast = entityList:GetEntities({classId=CDOTA_BaseNPC})
 	local hero = entityList:GetEntities({type=LuaEntity.TYPE_HERO})
 	--local projet = entityList:GetProjectiles({})
+
 	local team = me.team
 	for i,v in ipairs(hero) do
 		if v.team ~= team then 
@@ -118,7 +83,8 @@ function Main(tick)
 				if id == CDOTA_Unit_Hero_SpiritBreaker then ChargeF(cast,team,v.visible,v:GetAbility(1),hero,"spirit_breaker") end
 				if id == CDOTA_Unit_Hero_Life_Stealer then InfestF(team,hero,"life_stealer") end
 				if id == CDOTA_Unit_Hero_Sniper then SnipeF(team,hero,"sniper") end
-				if id == CDOTA_Unit_Hero_Windrunner or id == CDOTA_Unit_Hero_Pudge then RangeCastF(v) end
+				if id == CDOTA_Unit_Hero_Windrunner then RangeCastW(v,880,720) end
+				if id == CDOTA_Unit_Hero_Pudge then RangeCastP(v) end
 				if id == CDOTA_Unit_Hero_Rubick then WhatARubickF(hero,team,v.visible,v:GetAbility(5),cast) end			
 				if id == CDOTA_Unit_Hero_AncientApparition then AncientF(cast,team,hero,"ancient_apparition") end
 				if id == CDOTA_Unit_Hero_PhantomAssassin then PhantomKaF(v) end
@@ -126,8 +92,8 @@ function Main(tick)
 				if id == CDOTA_Unit_Hero_Kunkka then BoatF(cast,team) end
 				if id == CDOTA_Unit_Hero_Techies then MinesF(team) end
 				if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then TrapF(team) end
-			--else
-			--	Illision(v,tick)
+			else
+				Illision(v,tick)
 			end
 		end
 	end
@@ -136,7 +102,6 @@ function Main(tick)
 	--Project(projet,tick)
 	ShowSmoke(me.team)
 	--ShowTimers(me.team,tick,hero)
-	--ShowHeroes(me.team,tick)
 	
 	Sleep(150)
 
@@ -162,8 +127,6 @@ function RoshanSideMessage(title,sms)
 	test:AddElement(drawMgr:CreateText(90,3,-1,title,drawMgr:CreateFont("defaultFont","Arial",22,500)))
 	test:AddElement(drawMgr:CreateText(100,25,-1,""..sms.."",drawMgr:CreateFont("defaultFont","Arial",25,500)))
 end
-
-
 
 function ShowTimers(teams,tick,enemy)
 
@@ -297,6 +260,37 @@ function DirectBase(cast,team)
 	end
 end
 
+function Project(proj,tick)
+	if SleepCheck("ShowPreject") then
+		for i, v in ipairs(proj) do
+			if v.source == nil then
+				if string.sub(v.name, -11) == "base_attack" then
+					local hero = v.name:gsub("_base_attack","")
+					if not effect.project[hero] then
+						effect.project[hero] = drawMgr:CreateRect(0,0,18,18,0x000000ff) effect.project[hero].visible = false					
+						table.insert(effect.projEnemy,hero)
+					elseif effect.project[hero].visible == false then	
+						local minmap = MapToMinimap(v.position.x,v.position.y)
+						effect.project[hero].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..hero)
+						effect.project[hero].x = minmap.x-10
+						effect.project[hero].y = minmap.y-10
+						effect.project[hero].visible = true
+						effect.projSleep[hero] = tick
+					end
+				end
+			end
+		end	
+		for i,v in ipairs(effect.projEnemy) do
+			if effect.project[v].visible then
+				if tick >= effect.projSleep[v] + 1500 then
+					effect.project[v].visible = false
+				end
+			end
+		end
+		Sleep(225,"ShowPreject")
+	end	
+end
+
 function Illision(v,tick)
 	if SleepCheck("ShowIllusion") then
 		if not effect.illsuion[v.handle] then
@@ -306,30 +300,58 @@ function Illision(v,tick)
 			effect.illsuion[v.handle].x = Minimap.x-10
 			effect.illsuion[v.handle].y = Minimap.y-10
 			effect.illsuion[v.handle].textureId = drawMgr:GetTextureId("NyanUI/miniheroes/"..v.name:gsub("npc_dota_hero_",""))
+		else
+			effect.illsuion[v.handle].visible = (not v.visible and effect.illSleep[v.handle] >= tick and v.alive)
 		end
-		effect.illsuion[v.handle].visible = (not v.visible and effect.illSleep[v.handle] >= tick)
 		Sleep(250,"ShowIllusion")
 	end
 end
 
-function RangeCastF(v)
-	local number = effect.List[v.name].Spell
-	if number then
-		local spell = v:GetAbility(tonumber(number))
-		if spell and spell.cd ~= 0 then
-			if not effect.RangeCast[v.handle] and math.floor(spell.cd*100) >= effect.List[v.name].Start[spell.level] then
-				effect.RangeCast[v.handle] = true
-				for a = 1, effect.List[v.name].Count do
-					local pss = RCVector(v, effect.List[v.name].Range[spell.level]* a)
-					effect.RC[a] = Effect(pss, "blueTorch_flame" )
-					effect.RC[a]:SetVector(1,Vector(0,0,0))
-					effect.RC[a]:SetVector(0, pss)
+function RangeCastW(v,befor,after)	
+	local spell = v:GetAbility(2)
+	if spell and spell.cd ~= 0 then
+		local cd = math.floor(spell.cd*100)
+		if cd < befor then
+			if not effect.RangeCast[v.handle] then
+				if cd > after then
+					effect.RangeCast[v.handle] = true
+					for a = 1, 140 do
+						local pss = RCVector(v, 20 * a)
+						effect.RC[a] = Effect(pss, "draw_commentator" )
+						effect.RC[a]:SetVector(1,Vector(255,255,255))
+						effect.RC[a]:SetVector(0, pss)
+					end
 				end
-			elseif effect.RangeCast[v.handle] and (math.floor(spell.cd*100) < effect.List[v.name].End[spell.level] or v.alive == false) then
+			elseif cd < after or v.alive == false then
 				effect.RangeCast = {}
 				effect.RC = {}
 				collectgarbage("collect")
 			end
+		end
+	end
+end
+
+function RangeCastP(v)	
+	local spell = v:GetAbility(1)
+	local before = {1374,1274,1174,1074}
+	local after = {1280,1170,1060,950}
+	local count = {52,57,62,67}
+	if spell and spell.cd ~= 0 then
+		local cd = math.floor(spell.cd*100)
+		if not effect.RangeCast[v.handle] then
+			if cd > before[spell.level] then
+				effect.RangeCast[v.handle] = true
+				for a = 1, count[spell.level] do
+					local pss = RCVector(v, 20 * a)
+					effect.RC[a] = Effect(pss, "draw_commentator" )
+					effect.RC[a]:SetVector(1,Vector(255,255,255))
+					effect.RC[a]:SetVector(0, pss)
+				end
+			end
+		elseif cd < after[spell.level] or v.alive == false then
+			effect.RangeCast = {}
+			effect.RC = {}
+			collectgarbage("collect")
 		end
 	end
 end
@@ -353,9 +375,11 @@ function ArrowF(cast,team,status,heroName)
 			end
 		end
 		if ArrowS and ArrowV and #effect.Arrow == 0 then
-			for z = 1,29 do
-				local p = FindAB(ArrowS,ArrowV,100*z+100)
-				effect.Arrow[z] = Effect(p, "candle_flame_medium" )
+			local ret = FindRet(ArrowS,ArrowV)
+			for z = 1,147 do
+				local p = FindVector(ArrowS,ret,20*z+60)
+				effect.Arrow[z] = Effect(p, "draw_commentator" )
+				effect.Arrow[z]:SetVector(1,Vector(255,255,255))
 				effect.Arrow[z]:SetVector(0,p)
 			end
 		end
@@ -366,7 +390,6 @@ function ArrowF(cast,team,status,heroName)
 		collectgarbage("collect")
 	end
 end
-
 
 function BoatF(cast,team)
 	local ship = FindBoat(cast,team)
@@ -381,7 +404,8 @@ function BoatF(cast,team)
 			end
 		end
 		if BoatS ~= nil and BoatV ~= nil and not effect.Boat[1] then
-			local p = FindAB(BoatS,BoatV,1950)
+			local ret = FindRet(BoatS,BoatV)
+			local p = FindVector(BoatS,ret,1950)
 			effect.Boat[1] = Effect(p,"range_display")
 			effect.Boat[1]:SetVector(0,p)
 			effect.Boat[1]:SetVector(1,Vector(425,0,0))
@@ -586,20 +610,22 @@ function Roha()
 	end
 end
 
-function FindAB(first, second, distance)
-	local xAngle = math.deg(math.atan(math.abs(second.x - first.x)/math.abs(second.y - first.y)))
-	local retValue = nil
-	local retVector = Vector()
+function FindRet(first, second)
+	local xAngle = math.deg(math.atan(math.abs(second.x - first.x)/math.abs(second.y - first.y)))	
 	if first.x <= second.x and first.y >= second.y then
-			retValue = 270 + xAngle
+		return 270 + xAngle
 	elseif first.x >= second.x and first.y >= second.y then
-			retValue = (90-xAngle) + 180
+		return	(90-xAngle) + 180
 	elseif first.x >= second.x and first.y <= second.y then
-			retValue = 90+xAngle
+		return	90+xAngle
 	elseif first.x <= second.x and first.y <= second.y then
-			retValue = 90 - xAngle
+		return	90 - xAngle
 	end
-	retVector = Vector(first.x + math.cos(math.rad(retValue))*distance,first.y + math.sin(math.rad(retValue))*distance,0)
+end
+
+function FindVector(first,ret,distance)
+	local retVector = Vector()
+	retVector = Vector(first.x + math.cos(math.rad(ret))*distance,first.y + math.sin(math.rad(ret))*distance,0)
 	client:GetGroundPosition(retVector)
 	retVector.z = retVector.z+100
 	return retVector
@@ -700,23 +726,6 @@ function FindHexOrSilenceModifier(ent,tab)
 	return false
 end
 
-function GetRelativePlacement(alpha,font,text)
-	local alphaR = alpha/math.pi
-	if alphaR < .25 then
-		return Vector2D(0,2*(.25 - alphaR)*font:GetTextSize(text).y)
-	elseif alphaR < .5 then
-		return Vector2D(4*(alphaR - .25)*font:GetTextSize(text).x/2,0)
-	elseif alphaR < .75 then
-		return Vector2D(2*(alphaR - .25)*font:GetTextSize(text).x,0)
-	elseif alphaR < 1.25 then
-		return Vector2D(font:GetTextSize(text).x,2*(alphaR - .75)*font:GetTextSize(text).y)
-	elseif alphaR < 1.75 then
-		return Vector2D(2*(1.75 - alphaR)*font:GetTextSize(text).x,font:GetTextSize(text).y)
-	else
-		return Vector2D(0,2*(2.25 - alphaR)*font:GetTextSize(text).y)
-	end
-end
-
 function Roshan( kill )
     if kill.name == "dota_roshan_kill" then		
 		script:RegisterEvent(EVENT_TICK,Roha)
@@ -724,31 +733,10 @@ function Roshan( kill )
     end
 end
 
---[[function Key(msg,code)
-	if not client.chat then
-
-		if msg == KEY_DOWN and code == 20 then
-			effect.activated = true
-		else 
-			effect.activated = false
-		end
-		
-		if effect.activated == false then
-			if code == effect.key and Herotarget then
-				entityList:GetMyPlayer().selection[1]:Attack(Herotarget)
-			elseif msg == KEY_DOWN and code == effect.key1 and Herotarget then
-				effect.activated1 = not effect.activated1
-			end
-		end
-		
-	end	
-end]]
-
 function Load()
 	if PlayingGame() then		
 		script:RegisterEvent(EVENT_TICK,Main)
 		script:RegisterEvent(EVENT_DOTA,Roshan)
-		--script:RegisterEvent(EVENT_KEY,Key)
 		script:UnregisterEvent(Load)
 	end
 end
@@ -757,28 +745,27 @@ function GameClose()
 	if play then
 		script:UnregisterEvent(Roshan)
 		script:UnregisterEvent(Main)
-		--script:UnregisterEvent(Key)
 		script:RegisterEvent(EVENT_TICK,Load)
 		play = false
-		effect.fromcast = {} effect.Arrow = {}	ArrowS = nil ArrowV = nil
-		effect.Boat = {} BoatS = nil BoatV = nil effect.Cold = {} BlastM = nil
-		effect.speed = {600,650,700,750} speed = 600 ChargeS = nil
-		effect.RC = {} effect.RangeCast = {} effect.MS = {} effect.last = {}
-		clockTime = 0 stage = nil	effect.TS = {}	effect.rubick = {} 
-		for i = 1,5 do 
-			effect.rubick[i] = false
-		end	
-		effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {} effect.times = {}	
-		effect.activated = false effect.activated1 = false effect.Herostart = false	effect.HeroSleep = 0 effect.HeroIcon.visible = false effect.Line.visible = false
-		effect.ArrowI.visible = false
-		effect.PAI.visible = false
-		effect.InfestI.visible = false
-		effect.SnipeI.visible = false
-		effect.CWI.visible = false
-		effect.ChargeI1.visible = false
-		effect.ChargeI2.visible = false
-		collectgarbage("collect")
 	end
+	effect.fromcast = {} effect.Arrow = {}	ArrowS = nil ArrowV = nil
+	effect.Boat = {} BoatS = nil BoatV = nil effect.Cold = {} BlastM = nil
+	effect.speed = {600,650,700,750} speed = 600 ChargeS = nil
+	effect.RC = {} effect.RangeCast = {} effect.MS = {} effect.last = {}
+	clockTime = 0 stage = nil	effect.TS = {}	effect.rubick = {} 
+	for i = 1,5 do 
+		effect.rubick[i] = false
+	end	
+	effect.project = {} effect.projSleep = {} effect.illSleep = {} effect.projEnemy = {} effect.illsuion = {} effect.times = {}	
+	effect.activated = false effect.activated1 = false effect.Herostart = false	effect.HeroSleep = 0 effect.HeroIcon.visible = false effect.Line.visible = false
+	effect.ArrowI.visible = false
+	effect.PAI.visible = false
+	effect.InfestI.visible = false
+	effect.SnipeI.visible = false
+	effect.CWI.visible = false
+	effect.ChargeI1.visible = false
+	effect.ChargeI2.visible = false
+	collectgarbage("collect")
 end
 
 script:RegisterEvent(EVENT_TICK,Load)
