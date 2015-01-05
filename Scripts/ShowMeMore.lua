@@ -126,8 +126,8 @@ function Main(tick)
 				if id == CDOTA_Unit_Hero_Kunkka then BoatF(cast,team) end
 				if id == CDOTA_Unit_Hero_Techies then MinesF(team) end
 				if id == CDOTA_Unit_Hero_TemplarAssassin or id == CDOTA_Unit_Hero_Pugna then TrapF(team) end
-			else
-				Illision(v,tick)
+			--else
+			--	Illision(v,tick)
 			end
 		end
 	end
