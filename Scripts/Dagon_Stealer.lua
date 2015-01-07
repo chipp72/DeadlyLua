@@ -33,7 +33,8 @@ function Tick(tick)
 	rect.visible = visible
 	icon.visible = visible
 	
-	if visible and dagon:CanBeCasted() and me:CanUseItems()  then
+	if visible then
+	--and dagon:CanBeCasted() and me:CanUseItems()  then
 		local lvl = string.match (dagon.name, "%d+")
 		if not lvl then lvl = 1 end local dmgD = dmg[lvl*1]
 		local enemy = entityList:GetEntities({type=LuaEntity.TYPE_HERO,alive=true,visible=true,team = (5-me.team)})
