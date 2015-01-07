@@ -19,7 +19,7 @@ local dmg = {400,500,600,700,800}
 
 function Tick(tick)
  
-	if client.console or tick < sleep then return end
+--	if client.console or tick < sleep then return end
 	
 	sleep = tick + 200
 
@@ -28,7 +28,8 @@ function Tick(tick)
 	if not me then return end
        
 	local dagon = me:FindDagon()
-	local visible = Draw(activated,dagon) 
+	--local visible =
+	Draw(activated,dagon) 
 	
 	rect.visible = visible
 	icon.visible = visible
